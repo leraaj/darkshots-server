@@ -145,7 +145,7 @@ const login = async (request, response) => {
         .cookie("Auth_Token", userToken, {
           httpOnly: true, // Recommended for security
           secure: true, // Ensure cookie is only sent over HTTPS
-          // sameSite: "None", // Set SameSite attribute to prevent CSRF
+          sameSite: "None", // Set SameSite attribute to prevent CSRF
           maxAge: cookieExpires,
         })
         .status(200)
