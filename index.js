@@ -16,7 +16,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 //
 const userRoute = require("./routes/userRoute");
+const jobRoute = require("./routes/jobRoute");
+const categoryRoute = require("./routes/categoryRoute");
 app.use("/api", userRoute);
+app.use("/api", jobRoute);
+app.use("/api", categoryRoute);
 //
 mongoose.set("strictQuery", false);
 mongoose

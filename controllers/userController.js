@@ -175,14 +175,14 @@ const logout = async (request, response) => {
 
 const currentUser = async (request, response) => {
   try {
-    // Extract the token from the request (assuming it's stored in a cookie)
     const token = request.cookies.Auth_Token;
-    if (!token) {
-      return response.status(401).json({ message: "No token found" });
-    }
-    jwt.verify(token, "cookie", async (err, decoded) => {
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
-        return response.status(401).json({ message: "Invalid token" });
+        return response.status(401).json({
+          message: "Invalid token",
+          token: `token:${token}`,
+        });
       }
 
       try {
@@ -201,7 +201,35 @@ const currentUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
+const currentUserMobile = async (request, response) => {
+  try {
+    const authHeader = request.headers.authorization;
+    const token = authHeader.split(" ")[1];
 
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return response.status(401).json({
+          message: "Invalid token",
+          token: `token: ${token}`,
+        });
+      }
+
+      try {
+        const userId = decoded.id;
+        const user = await UserModel.findOne({ _id: userId });
+
+        if (!user) {
+          return response.status(404).json({ message: "User not found" });
+        }
+        response.status(200).json({ user: user, token: token });
+      } catch (error) {
+        response.status(500).json({ message: error.message });
+      }
+    });
+  } catch (error) {
+    response.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   getUsers,
   getUser,
@@ -211,4 +239,5 @@ module.exports = {
   login,
   logout,
   currentUser,
+  currentUserMobile,
 };
