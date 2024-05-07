@@ -11,6 +11,7 @@ const {
   currentUser,
   currentUserMobile,
 } = require("../controllers/userController");
+const UserModel = require("../model/userModel");
 // Login/Logout takes precedence to set a TOKEN either with value or null
 
 router.post("/user/login", login);

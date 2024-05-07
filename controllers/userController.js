@@ -94,23 +94,18 @@ const updateUser = async (request, response) => {
 
     response.status(200).json({ user });
   } catch (error) {
-    const validationErrors = {};
-    if (error.name === "ValidationError") {
-      // Validation error occurred
-      if (error.errors && Object.keys(error.errors).length > 0) {
-        // Extract and send specific validation error messages
-        for (const field in error.errors) {
-          validationErrors[field] = error.errors[field].message;
-        }
-      }
-      response.status(400).json({ errors: validationErrors });
-    } else {
-      // Other types of errors (e.g., server error)
-      console.error(error.message);
-      response.status(500).json({ message: "Internal Server Error" });
+    if (error.code === 11000 || error.code === 11001) {
+      // Handle duplicate field error here
+      return response.status(400).json({
+        message: "Duplicate field value. This value already exists.",
+        field: error.keyValue, // The duplicate field and value
+      });
     }
+    // Other validation or save errors
+    response.status(500).json({ message: error.message, status: error.status });
   }
 };
+
 const deleteUser = async (request, response) => {
   try {
     const { id } = request.params;
