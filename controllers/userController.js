@@ -81,17 +81,37 @@ const addUser = async (request, response) => {
 const updateUser = async (request, response) => {
   try {
     const { id } = request.params;
-    const user = await UserModel.findByIdAndUpdate(id, request.body, {
-      new: true, // To return the updated document
-      runValidators: true, // To run validation defined in your schema
-    });
+    const { fullName, email, contact, username, password, position } =
+      request.body;
 
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update the user document
+    const user = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        fullName,
+        email,
+        contact,
+        username,
+        password: hashedPassword, // Update the hashed password
+        position,
+      },
+      {
+        new: true, // To return the updated document
+        runValidators: true, // To run validation defined in your schema
+      }
+    );
+
+    // Check if user exists
     if (!user) {
       return response
         .status(404)
         .json({ message: `Cannot find any user with ID: ${id}` });
     }
 
+    // Send updated user as response
     response.status(200).json({ user });
   } catch (error) {
     if (error.code === 11000 || error.code === 11001) {
