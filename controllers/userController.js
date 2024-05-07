@@ -163,13 +163,15 @@ const logout = async (request, response) => {
       secure: true,
       sameSite: "None",
     });
-    response.end();
     response.status(200).json({
       message: "Cookie unset!",
       redirectUrl: `/`,
     });
   } catch (error) {
     response.status(500).json({ message: error.message });
+  } finally {
+    // Always end the response to close the connection
+    response.end();
   }
 };
 
