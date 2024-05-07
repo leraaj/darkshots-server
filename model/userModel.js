@@ -66,7 +66,6 @@ userSchema.pre("findOneAndUpdate", async function (next) {
     next(error);
   }
 });
-
 userSchema.post("findOneAndUpdate", function (doc, next) {
   console.log("user was updated & saved", doc);
   next();
