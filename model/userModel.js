@@ -1,6 +1,7 @@
-//define user models
+// Define user models
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -36,6 +37,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 userSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt();
   const user = this;
@@ -43,6 +45,7 @@ userSchema.pre("save", async function (next) {
   console.log("user about to be created & saved", user);
   next();
 });
+
 userSchema.post("save", function (doc, next) {
   console.log("new user was created & saved", doc);
   next();
@@ -63,6 +66,7 @@ userSchema.pre("findOneAndUpdate", async function (next) {
     next(error);
   }
 });
+
 userSchema.post("findOneAndUpdate", function (doc, next) {
   console.log("user was updated & saved", doc);
   next();
