@@ -158,7 +158,11 @@ const login = async (request, response) => {
 };
 const logout = async (request, response) => {
   try {
-    response.clearCookie("Auth_Token");
+    response.clearCookie("auth-token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
     response.status(200).json({
       message: "Cookie unset!",
       redirectUrl: `/`,
