@@ -86,8 +86,6 @@ const updateUser = async (request, response) => {
 
     // Hash the password using bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Update the user document
     const user = await UserModel.findByIdAndUpdate(
       id,
       {
@@ -95,7 +93,7 @@ const updateUser = async (request, response) => {
         email,
         contact,
         username,
-        password: hashedPassword, // Update the hashed password
+        password: hashedPassword,
         position,
       },
       {
@@ -104,14 +102,12 @@ const updateUser = async (request, response) => {
       }
     );
 
-    // Check if user exists
     if (!user) {
       return response
         .status(404)
         .json({ message: `Cannot find any user with ID: ${id}` });
     }
 
-    // Send updated user as response
     response.status(200).json({ user });
   } catch (error) {
     if (error.code === 11000 || error.code === 11001) {
