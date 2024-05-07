@@ -72,8 +72,8 @@ const updateJob = async (request, response) => {
   try {
     const { id } = request.params;
     const job = await JobModel.findByIdAndUpdate(id, request.body, {
-      new: true,
-      runValidators: true,
+      new: true, // To return the updated document
+      runValidators: true, // To run validation defined in your schema
     });
 
     if (!job) {
@@ -84,18 +84,15 @@ const updateJob = async (request, response) => {
 
     response.status(200).json({ job });
   } catch (error) {
-    const validationErrors = {};
-    if (error.name === "ValidationError") {
-      if (error.errors && Object.keys(error.errors).length > 0) {
-        for (const field in error.errors) {
-          validationErrors[field] = error.errors[field].message;
-        }
-      }
-      response.status(400).json({ errors: validationErrors });
-    } else {
-      console.error(error.message);
-      response.status(500).json({ message: "Internal Server Error" });
+    if (error.code === 11000 || error.code === 11001) {
+      // Handle duplicate field error here
+      return response.status(400).json({
+        message: "Duplicate field value. This value already exists.",
+        field: error.keyValue, // The duplicate field and value
+      });
     }
+    // Other validation or save errors
+    response.status(500).json({ message: error.message, status: error.status });
   }
 };
 const deleteJob = async (request, response) => {

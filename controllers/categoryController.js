@@ -68,10 +68,17 @@ const updateCategory = async (request, response) => {
         .status(404)
         .json({ message: `Cannot find any category with ID: ${id}` });
     }
-    response.status(200).json(updatedCategory);
+    response.status(200).json({ updatedCategory });
   } catch (error) {
-    console.error(error.message);
-    response.status(500).json({ message: "Internal Server Error" });
+    if (error.code === 11000 || error.code === 11001) {
+      // Handle duplicate field error here
+      return response.status(400).json({
+        message: "Duplicate field value. This value already exists.",
+        field: error.keyValue, // The duplicate field and value
+      });
+    }
+    // Other validation or save errors
+    response.status(500).json({ message: error.message, status: error.status });
   }
 };
 
