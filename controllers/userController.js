@@ -163,6 +163,7 @@ const logout = async (request, response) => {
       secure: true,
       sameSite: "None",
     });
+    response.end();
     response.status(200).json({
       message: "Cookie unset!",
       redirectUrl: `/`,
