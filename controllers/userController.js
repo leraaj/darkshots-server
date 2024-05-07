@@ -158,7 +158,7 @@ const login = async (request, response) => {
 };
 const logout = async (request, response) => {
   try {
-    response.clearCookie("Auth-token", {
+    response.clearCookie("Auth_Token", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
