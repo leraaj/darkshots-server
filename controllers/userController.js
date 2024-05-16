@@ -1,6 +1,7 @@
 const UserModel = require("../model/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const checkForDuplicates = require("../middleware/checkForDuplicates");
 require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -16,32 +17,42 @@ const getUsers = async (request, response) => {
     const userLists = await UserModel.find({});
     response.status(200).json(userLists);
   } catch (error) {
-    console.log(error.message);
+    console.error("Error in getUsers:", error.message);
     response.status(500).json({ message: error.message });
   }
 };
+
 const getUser = async (request, response) => {
   try {
     const { id } = request.params;
     const user = await UserModel.findById(id);
     response.status(200).json({ user });
   } catch (error) {
+    console.error("Error in getUser:", error.message);
     response.status(500).json({ message: error.message });
   }
 };
+
 const addUser = async (request, response) => {
   try {
-    const {
-      fullName,
-      email,
-      contact,
-      username,
-      password,
-      position,
-      applicationStatus,
-    } = request.body;
+    const addFields = request.body;
+    // Necessary fields to validate duplications
+    const duplicateCheckFields = ["fullName", "email", "contact", "username"];
+    // Call validation
+    const { hasDuplicates, duplicateFields } = await checkForDuplicates({
+      Model: UserModel,
+      requestBody: addFields,
+      fieldsToCheck: duplicateCheckFields,
+    });
+    // Send Response
+    if (hasDuplicates)
+      return response.status(409).json({
+        message: `Duplicate values found for fields: ${duplicateFields.join(
+          ", "
+        )}`,
+        duplicates: duplicateFields,
+      });
 
-    // Create a new user instance without saving it to catch validation errors
     const user = new UserModel({
       fullName,
       email,
@@ -52,38 +63,41 @@ const addUser = async (request, response) => {
       applicationStatus,
     });
 
-    // Validate the user data
     await user.validate();
 
-    // If validation passes, save the user
     const addedUser = await user.save();
-
     response.status(201).json(addedUser);
   } catch (error) {
-    const validationErrors = {};
-    if (error.name === "ValidationError") {
-      // Validation error occurred
-      if (error.errors && Object.keys(error.errors).length > 0) {
-        // Extract and send specific validation error messages
-        for (const field in error.errors) {
-          validationErrors[field] = error.errors[field].message;
-        }
-      }
-      response.status(400).json({ errors: validationErrors });
-    } else {
-      // Other types of errors (e.g., server error)
-      console.error(error.message);
-      response.status(500).json({ message: "Internal Server Error" });
-    }
+    console.error("Error in addUser:", error.message);
+    response.status(500).json({ message: error.message });
   }
 };
 
 const updateUser = async (request, response) => {
   try {
     const { id } = request.params;
-    const user = await UserModel.findByIdAndUpdate(id, request.body, {
-      new: true, // To return the updated document
-      runValidators: true, // To run validation defined in your schema
+    const updatedFields = request.body;
+    // Necessary fields to validate duplications
+    const duplicateCheckFields = ["fullName", "contact", "email", "username"];
+    // Call validation
+    const { hasDuplicates, duplicateFields } = await checkForDuplicates({
+      Model: UserModel,
+      requestBody: updatedFields,
+      fieldsToCheck: duplicateCheckFields,
+      excludeId: id,
+    });
+    // Send Response
+    if (hasDuplicates)
+      return response.status(409).json({
+        message: `Duplicate values found for fields: ${duplicateFields.join(
+          ", "
+        )}`,
+        duplicates: duplicateFields,
+      });
+
+    const user = await UserModel.findByIdAndUpdate(id, updatedFields, {
+      new: true,
+      runValidators: true,
     });
 
     if (!user) {
@@ -94,15 +108,8 @@ const updateUser = async (request, response) => {
 
     response.status(200).json({ user });
   } catch (error) {
-    if (error.code === 11000 || error.code === 11001) {
-      // Handle duplicate field error here
-      return response.status(400).json({
-        message: "Duplicate field value. This value already exists.",
-        field: error.keyValue, // The duplicate field and value
-      });
-    }
-    // Other validation or save errors
-    response.status(500).json({ message: error.message, status: error.status });
+    console.error("Error in updateUser:", error.message);
+    response.status(500).json({ message: error.message });
   }
 };
 
@@ -113,49 +120,51 @@ const deleteUser = async (request, response) => {
     if (!user) {
       return response
         .status(404)
-        .json({ message: `cannot find any product  with ID ${id}` });
+        .json({ message: `Cannot find any product with ID ${id}` });
     }
     response.status(200).json(user);
   } catch (error) {
+    console.error("Error in deleteUser:", error.message);
     response.status(500).json({ message: error.message });
   }
 };
+
 const login = async (request, response) => {
   try {
     const inputUsername = request.body.username;
     const inputPassword = request.body.password;
-    const user = await UserModel.findOne({
-      username: inputUsername,
-    });
+    const user = await UserModel.findOne({ username: inputUsername });
+
     if (!user) {
       return response
         .status(401)
         .json({ message: "Invalid username or password" });
-      // User does not exists
     }
+
     const passwordMatch = await bcrypt.compare(inputPassword, user.password);
     if (passwordMatch) {
-      var userToken = createToken(user.id);
+      const userToken = createToken(user.id);
       response
         .cookie("Auth_Token", userToken, {
-          httpOnly: true, // Recommended for security
-          secure: true, // Ensure cookie is only sent over HTTPS
-          sameSite: "None", // Set SameSite attribute to prevent CSRF
+          httpOnly: true,
+          secure: true,
+          sameSite: "None",
           maxAge: cookieExpires,
         })
         .status(200)
         .json({
-          user: user,
+          user,
           token: userToken,
         });
     } else {
       response.status(401).json({ message: "Invalid username or password" });
-      // Invalid credentials
     }
   } catch (error) {
+    console.error("Error in login:", error.message);
     response.status(500).json({ message: error.message });
   }
 };
+
 const logout = async (request, response) => {
   try {
     response.clearCookie("Auth_Token", {
@@ -168,9 +177,9 @@ const logout = async (request, response) => {
       redirectUrl: `/`,
     });
   } catch (error) {
+    console.error("Error in logout:", error.message);
     response.status(500).json({ message: error.message });
   } finally {
-    // Always end the response to close the connection
     response.end();
   }
 };
@@ -194,15 +203,18 @@ const currentUser = async (request, response) => {
         if (!user) {
           return response.status(404).json({ message: "User not found" });
         }
-        response.status(200).json({ user: user, token: token });
+        response.status(200).json({ user, token });
       } catch (error) {
+        console.error("Error in currentUser:", error.message);
         response.status(500).json({ message: error.message });
       }
     });
   } catch (error) {
+    console.error("Error in currentUser:", error.message);
     response.status(500).json({ message: error.message });
   }
 };
+
 const currentUserMobile = async (request, response) => {
   try {
     const authHeader = request.headers.authorization;
@@ -223,15 +235,18 @@ const currentUserMobile = async (request, response) => {
         if (!user) {
           return response.status(404).json({ message: "User not found" });
         }
-        response.status(200).json({ user: user, token: token });
+        response.status(200).json({ user, token });
       } catch (error) {
+        console.error("Error in currentUserMobile:", error.message);
         response.status(500).json({ message: error.message });
       }
     });
   } catch (error) {
-    response.status(500).json({ message: error.message });
+    console.error("Error in currentUserMobile:", error.message);
+    response.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 module.exports = {
   getUsers,
   getUser,
