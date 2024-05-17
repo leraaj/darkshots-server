@@ -25,23 +25,10 @@ const getJob = async (request, response) => {
 };
 const addJob = async (request, response) => {
   try {
-    const {
-      title,
-      category,
-      details: { why, what, responsibilities, requirements },
-    } = request.body;
+    const { jobDetails } = request.body;
 
     // Create a new job instance without saving it to catch validation errors
-    const job = new JobModel({
-      title,
-      category,
-      details: {
-        why,
-        what,
-        responsibilities,
-        requirements,
-      },
-    });
+    const job = new JobModel(jobDetails);
 
     // Validate the job data
     await job.validate();

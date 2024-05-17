@@ -47,15 +47,16 @@ const jobSchema = new mongoose.Schema({
     },
   },
 });
-
 jobSchema.pre("save", async function (next) {
-  console.log("job about to be created & saved", this);
+  console.log("Job about to be created & saved", this);
   next();
 });
+
 jobSchema.post("save", function (doc, next) {
-  console.log("new job was created & saved", doc);
+  console.log("New job was created & saved", doc);
   next();
 });
+
 jobSchema.pre("findOneAndUpdate", async function (next) {
   try {
     next();
@@ -63,8 +64,9 @@ jobSchema.pre("findOneAndUpdate", async function (next) {
     next(error);
   }
 });
+
 jobSchema.post("findOneAndUpdate", function (doc, next) {
-  console.log("job was updated & saved", doc);
+  console.log("Job was updated & saved", doc);
   next();
 });
 // Define models based on the schemas
