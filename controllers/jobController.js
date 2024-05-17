@@ -1,5 +1,4 @@
 const JobModel = require("../model/jobModel");
-require("dotenv").config();
 
 const getJobs = async (request, response) => {
   try {
@@ -25,7 +24,7 @@ const getJob = async (request, response) => {
 };
 const addJob = async (request, response) => {
   try {
-    const { jobDetails } = request.body;
+    const jobDetails = request.body;
 
     // Create a new job instance without saving it to catch validation errors
     const job = new JobModel(jobDetails);
@@ -36,25 +35,12 @@ const addJob = async (request, response) => {
     // If validation passes, save the job
     const addedJob = await job.save();
 
-    response.status(201).json(addedJob);
+    response.status(200).json(addedJob);
   } catch (error) {
-    const validationErrors = {};
-    if (error.name === "ValidationError") {
-      // Validation error occurred
-      if (error.errors && Object.keys(error.errors).length > 0) {
-        // Extract and send specific validation error messages
-        for (const field in error.errors) {
-          validationErrors[field] = error.errors[field].message;
-        }
-      }
-      response.status(400).json({ errors: validationErrors });
-    } else {
-      // Other types of errors (e.g., server error)
-      console.error(error.message);
-      response.status(500).json({ message: "Internal Server Error" });
-    }
+    response.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 const updateJob = async (request, response) => {
   try {
     const { id } = request.params;
