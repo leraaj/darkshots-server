@@ -13,47 +13,41 @@ const jobSchema = new mongoose.Schema({
     required: true,
   },
   details: {
-    descriptions: {
-      why: {
-        type: String,
-        required: [true, "Description (why) is required"],
-      },
-      what: {
-        type: String,
-        required: [true, "Description (what) is required"],
-      },
-      benefits: {
-        pay: {
-          type: String,
-          required: [true, "Pay is required"],
-        },
-        schedule: {
-          type: String,
-          required: [true, "Pay is required"],
-        },
-      },
+    why: {
+      type: String,
+      required: [true, "Description (why) is required"],
     },
-    lists: {
-      responsibilities: {
-        type: [String],
-        required: [true, "At least one responsibility is required"],
-        validate: {
-          validator: function (array) {
-            return array.length > 0;
-          },
-          message: "At least one responsibility is required.",
-        },
+    what: {
+      type: String,
+      required: [true, "Description (what) is required"],
+    },
+  },
+  benefits: {
+    pay: {
+      type: String,
+      required: [true, "Pay is required"],
+    },
+    schedule: {
+      type: String,
+      required: [true, "Pay is required"],
+    },
+  },
+  responsibilities: {
+    type: [String],
+    validate: {
+      validator: function (array) {
+        return array.length > 0;
       },
-      requirements: {
-        type: [String],
-        required: [true, "At least one requirement is required"],
-        validate: {
-          validator: function (array) {
-            return array.length > 0;
-          },
-          message: "At least one requirement is required.",
-        },
+      message: "At least one responsibility is required.",
+    },
+  },
+  requirements: {
+    type: [String],
+    validate: {
+      validator: function (array) {
+        return array.length > 0;
       },
+      message: "At least one requirement is required.",
     },
   },
 });
