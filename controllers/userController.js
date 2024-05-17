@@ -53,22 +53,14 @@ const addUser = async (request, response) => {
         duplicates: duplicateFields,
       });
 
-    const user = new UserModel({
-      fullName,
-      email,
-      contact,
-      username,
-      password,
-      position,
-      applicationStatus,
-    });
+    const user = new UserModel(addFields);
 
     await user.validate();
 
     const addedUser = await user.save();
     response.status(201).json(addedUser);
   } catch (error) {
-    console.error("Error in addUser:", error.message);
+    console.error("Error in addUser:", error);
     response.status(500).json({ message: error.message });
   }
 };
