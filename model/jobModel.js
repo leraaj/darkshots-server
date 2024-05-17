@@ -22,10 +22,6 @@ const jobSchema = new mongoose.Schema({
         type: String,
         required: [true, "Description (what) is required"],
       },
-      roleDetails: {
-        type: String,
-        required: [true, "Role details is required"],
-      },
       benefits: {
         pay: {
           type: String,
