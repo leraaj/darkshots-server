@@ -1,4 +1,3 @@
-//define job models
 const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema({
@@ -29,7 +28,7 @@ const jobSchema = new mongoose.Schema({
     },
     schedule: {
       type: String,
-      required: [true, "Pay is required"],
+      required: [true, "Schedule is required"],
     },
   },
   responsibilities: {
@@ -51,28 +50,7 @@ const jobSchema = new mongoose.Schema({
     },
   },
 });
-jobSchema.pre("save", async function (next) {
-  console.log("Job about to be created & saved", this);
-  next();
-});
 
-jobSchema.post("save", function (doc, next) {
-  console.log("New job was created & saved", doc);
-  next();
-});
-
-jobSchema.pre("findOneAndUpdate", async function (next) {
-  try {
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-jobSchema.post("findOneAndUpdate", function (doc, next) {
-  console.log("Job was updated & saved", doc);
-  next();
-});
 // Define models based on the schemas
 const JobModel = mongoose.model("jobs", jobSchema);
 module.exports = JobModel;

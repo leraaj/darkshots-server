@@ -26,14 +26,8 @@ const addJob = async (request, response) => {
   try {
     const jobDetails = request.body;
 
-    // Create a new job instance without saving it to catch validation errors
-    const job = new JobModel(jobDetails);
-
-    // Validate the job data
-    await job.validate();
-
-    // If validation passes, save the job
-    const addedJob = await job.save();
+    // Create a new job instance and validate
+    const addedJob = await JobModel.create(jobDetails);
 
     response.status(200).json(addedJob);
   } catch (error) {
