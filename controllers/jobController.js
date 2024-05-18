@@ -31,7 +31,10 @@ const addJob = async (request, response) => {
 
     response.status(200).json(addedJob);
   } catch (error) {
-    response.status(500).json({ message: "Internal Server Error" });
+    console.error("Error adding job:", error); // Log the error for debugging purposes
+    response
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 

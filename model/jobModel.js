@@ -7,50 +7,40 @@ const jobSchema = new mongoose.Schema({
     unique: true,
   },
   category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
+    type: String,
     required: true,
   },
   details: {
     why: {
       type: String,
-      required: [true, "Description (why) is required"],
+      required: true,
     },
     what: {
       type: String,
-      required: [true, "Description (what) is required"],
+      required: true,
     },
-  },
-  benefits: {
-    pay: {
-      type: String,
-      required: [true, "Pay is required"],
+    responsibilities: {
+      type: [String],
+      required: true,
     },
-    schedule: {
-      type: String,
-      required: [true, "Schedule is required"],
+    requirements: {
+      type: [String],
+      required: true,
     },
-  },
-  responsibilities: {
-    type: [String],
-    validate: {
-      validator: function (array) {
-        return array.length > 0;
+    benefits: {
+      pay: {
+        type: String,
+        required: true,
       },
-      message: "At least one responsibility is required.",
-    },
-  },
-  requirements: {
-    type: [String],
-    validate: {
-      validator: function (array) {
-        return array.length > 0;
+      schedule: {
+        type: String,
+        required: true,
       },
-      message: "At least one requirement is required.",
     },
   },
 });
 
-// Define models based on the schemas
-const JobModel = mongoose.model("jobs", jobSchema);
+// Define model based on the schema
+const JobModel = mongoose.model("Job", jobSchema);
+
 module.exports = JobModel;
