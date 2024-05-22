@@ -36,15 +36,13 @@ const getUser = async (request, response) => {
 const addUser = async (request, response) => {
   try {
     const addFields = request.body;
-    // Necessary fields to validate duplications
     const duplicateCheckFields = ["fullName", "email", "contact", "username"];
-    // Call validation
     const { hasDuplicates, duplicateFields } = await checkForDuplicates({
       Model: UserModel,
       requestBody: addFields,
       fieldsToCheck: duplicateCheckFields,
     });
-    // Send Response
+
     if (hasDuplicates)
       return response.status(409).json({
         message: `Duplicate values found for fields: ${duplicateFields.join(
@@ -54,9 +52,7 @@ const addUser = async (request, response) => {
       });
 
     const user = new UserModel(addFields);
-
     await user.validate();
-
     const addedUser = await user.save();
     response.status(200).json(addedUser);
   } catch (error) {
@@ -69,16 +65,14 @@ const updateUser = async (request, response) => {
   try {
     const { id } = request.params;
     const updatedFields = request.body;
-    // Necessary fields to validate duplications
     const duplicateCheckFields = ["fullName", "contact", "email", "username"];
-    // Call validation
     const { hasDuplicates, duplicateFields } = await checkForDuplicates({
       Model: UserModel,
       requestBody: updatedFields,
       fieldsToCheck: duplicateCheckFields,
       excludeId: id,
     });
-    // Send Response
+
     if (hasDuplicates)
       return response.status(409).json({
         message: `Duplicate values found for fields: ${duplicateFields.join(

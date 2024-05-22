@@ -1,46 +1,50 @@
 const mongoose = require("mongoose");
 
-const jobSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  category: {
-    type: String,
-    required: true,
-  },
-  details: {
-    why: {
+const jobSchema = new mongoose.Schema(
+  {
+    title: {
       type: String,
       required: true,
+      unique: true,
     },
-    what: {
-      type: String,
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Categories",
       required: true,
     },
-    responsibilities: {
-      type: [String],
-      required: true,
-    },
-    requirements: {
-      type: [String],
-      required: true,
-    },
-    benefits: {
-      pay: {
+    details: {
+      why: {
         type: String,
         required: true,
       },
-      schedule: {
+      what: {
         type: String,
         required: true,
       },
+      responsibilities: {
+        type: [String],
+        required: true,
+      },
+      requirements: {
+        type: [String],
+        required: true,
+      },
+      benefits: {
+        pay: {
+          type: String,
+          required: true,
+        },
+        schedule: {
+          type: String,
+          required: true,
+        },
+      },
     },
   },
-});
+  {
+    timestamps: true,
+  }
+);
 
-// Define model based on the schema
-const JobModel = mongoose.model("Job", jobSchema);
-
+const JobModel = mongoose.model("Jobs", jobSchema);
 module.exports = JobModel;
