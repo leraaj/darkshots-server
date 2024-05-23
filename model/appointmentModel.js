@@ -8,12 +8,12 @@ const appointmentSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    jobId: {
+    job: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Jobs",
       required: true,
     },
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
       required: true,

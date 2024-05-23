@@ -6,22 +6,22 @@ const userSchema = new mongoose.Schema(
     fullName: {
       type: String,
       required: [true, "Please enter fullname"],
-      unique: [true, "Full name is required"],
+      unique: true,
     },
     contact: {
       type: String,
       required: true,
-      unique: [true, "contact is required"],
+      unique: true,
     },
     email: {
       type: String,
       required: true,
-      unique: [true, "email is required"],
+      unique: true,
     },
     username: {
       type: String,
       required: true,
-      unique: [true, "username is required"],
+      unique: true,
     },
     password: {
       type: String,
@@ -58,7 +58,6 @@ userSchema.post("save", function (doc, next) {
   console.log("new user was created & saved", doc);
   next();
 });
-
 userSchema.pre("findOneAndUpdate", async function (next) {
   try {
     if (this._update.password) {
