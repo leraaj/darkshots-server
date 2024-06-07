@@ -34,6 +34,12 @@ const userSchema = new mongoose.Schema(
       // 2 = client
       // 3 = applicant
     },
+    skills: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Jobs",
+      },
+    ],
     applicationStatus: {
       type: Number,
       required: [true, "Please select status"],
