@@ -41,17 +41,17 @@ const getNotification = async (req, res) => {
     const { id } = req.params;
     // Fetch Appointment data
     const appointments = await AppointmentModel.find({ user: id })
-      .populate("user", "fullName email")
+      .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select(
-        "job user meetingLink meetingTime appointmentStatus phase createdAt updatedAt"
-      );
+      .select("job user meetingLink meetingTime appointmentStatus createdAt");
 
     // Fetch Application data
     const applications = await ApplicantModel.find({ user: id })
-      .populate("user", "fullName email")
+      .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt");
+      .select(
+        "job user applicationStatus createdAt updatedAt  phase createdAt"
+      );
 
     // Combine the results into a single array
     const notifications = [
