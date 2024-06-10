@@ -36,6 +36,7 @@ const getUser = async (request, response) => {
 const addUser = async (request, response) => {
   try {
     const addFields = request.body;
+    addFields.loggedIn = 0;
     console.log(addFields);
     const duplicateCheckFields = ["fullName", "email", "contact", "username"];
     const { hasDuplicates, duplicateFields } = await checkForDuplicates({
