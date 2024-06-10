@@ -1,4 +1,4 @@
-const ApplicantModel = require("../model/applicationModel");
+const ApplicantModel = require("../model/applicantModel");
 const ApplicationModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
 const getApplications = async (request, response) => {
@@ -39,7 +39,6 @@ const getApplication = async (request, response) => {
 const getNotification = async (req, res) => {
   try {
     const { id } = req.params;
-
     // Fetch Appointment data
     const appointments = await AppointmentModel.find({ user: id })
       .populate("user", "fullName email")
