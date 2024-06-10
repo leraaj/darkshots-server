@@ -1,12 +1,16 @@
 const ApplicationModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
 const getApplications = async (request, response) => {
-  const { id } = request.params;
   try {
-    const applications = await ApplicationModel.findById(id)
+    const applications = await ApplicationModel.find({})
       .populate("user", "fullName email")
       .populate("job", "title details")
       .select("job user applicationStatus createdAt updatedAt");
+
+    if (!applications.length) {
+      return response.status(404).json({ message: "No applications found" });
+    }
+
     response.status(200).json(applications);
   } catch (error) {
     console.error(error.message);
@@ -56,11 +60,9 @@ const getNotification = async (req, res) => {
     const notifications = [
       ...appointments.map((appointment) => ({
         ...appointment._doc,
-        type: "appointment",
       })),
       ...applications.map((application) => ({
         ...application._doc,
-        type: "application",
       })),
     ];
 
