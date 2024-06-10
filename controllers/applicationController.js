@@ -1,3 +1,4 @@
+const ApplicantModel = require("../model/applicationModel");
 const ApplicationModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
 const getApplications = async (request, response) => {
@@ -32,6 +33,52 @@ const getApplication = async (request, response) => {
   } catch (error) {
     console.error(error.message);
     response.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const getNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch Appointment data
+    const appointments = await AppointmentModel.find({ user: id })
+      .populate("user", "fullName email")
+      .populate("job", "title details")
+      .select(
+        "job user meetingLink meetingTime appointmentStatus phase createdAt updatedAt"
+      );
+
+    // Fetch Application data
+    const applications = await ApplicantModel.find({ user: id })
+      .populate("user", "fullName email")
+      .populate("job", "title details")
+      .select("job user applicationStatus createdAt updatedAt");
+
+    // Combine the results into a single array
+    const notifications = [
+      ...appointments.map((appointment) => ({
+        ...appointment._doc,
+        type: "appointment",
+      })),
+      ...applications.map((application) => ({
+        ...application._doc,
+        type: "application",
+      })),
+    ];
+
+    // Sort the combined array by createdAt in descending order
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    if (notifications.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No notifications found for this user." });
+    }
+
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
