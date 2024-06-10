@@ -28,9 +28,17 @@ app.use(cookieParser());
 const userRoute = require("./routes/userRoute");
 const jobRoute = require("./routes/jobRoute");
 const categoryRoute = require("./routes/categoryRoute");
+const applicationRoute = require("./routes/applicationRoute");
+const appointmentRoute = require("./routes/appointmentRoute");
+const collaboratorRoute = require("./routes/collaboratorRoute");
+const chatRoute = require("./routes/chatRoute");
 app.use("/api", userRoute);
 app.use("/api", jobRoute);
 app.use("/api", categoryRoute);
+app.use("/api", applicationRoute);
+app.use("/api", appointmentRoute);
+app.use("/api", collaboratorRoute);
+app.use("/api", chatRoute);
 //
 mongoose.set("strictQuery", false);
 mongoose

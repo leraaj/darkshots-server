@@ -3,11 +3,7 @@ const mongoose = require("mongoose");
 
 const chatSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-    },
-    users: [
+    user: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users",
@@ -36,9 +32,9 @@ const chatSchema = new mongoose.Schema(
         },
       },
     ],
-    orderId: {
+    collaborator: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Orders",
+      ref: "Collaborators",
       required: true,
       unique: true,
     },

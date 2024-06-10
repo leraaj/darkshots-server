@@ -36,6 +36,7 @@ const getUser = async (request, response) => {
 const addUser = async (request, response) => {
   try {
     const addFields = request.body;
+    console.log(addFields);
     const duplicateCheckFields = ["fullName", "email", "contact", "username"];
     const { hasDuplicates, duplicateFields } = await checkForDuplicates({
       Model: UserModel,
@@ -114,7 +115,6 @@ const deleteUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const login = async (request, response) => {
   try {
     const inputUsername = request.body.username;
@@ -129,19 +129,27 @@ const login = async (request, response) => {
 
     const passwordMatch = await bcrypt.compare(inputPassword, user.password);
     if (passwordMatch) {
-      const userToken = createToken(user.id);
-      response
-        .cookie("Auth_Token", userToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "None",
-          maxAge: cookieExpires,
-        })
-        .status(200)
-        .json({
-          user,
-          token: userToken,
-        });
+      if (user.loggedIn === 1) {
+        return response
+          .status(403)
+          .json({ message: "User is already logged in" });
+      } else {
+        const userToken = createToken(user.id);
+        await UserModel.findByIdAndUpdate(user._id, { loggedIn: 1 });
+
+        return response
+          .cookie("Auth_Token", userToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
+            maxAge: cookieExpires,
+          })
+          .status(200)
+          .json({
+            user,
+            token: userToken,
+          });
+      }
     } else {
       response.status(401).json({ message: "Invalid username or password" });
     }
@@ -150,16 +158,19 @@ const login = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const logout = async (request, response) => {
   try {
+    const { id } = request.params;
+
+    await UserModel.findByIdAndUpdate(id, { loggedIn: 0 });
+
     response.clearCookie("Auth_Token", {
       httpOnly: true,
       secure: true,
       sameSite: "None",
     });
     response.status(200).json({
-      message: "Cookie unset!",
+      message: "User logged out and cookie unset!",
       redirectUrl: `/`,
     });
   } catch (error) {

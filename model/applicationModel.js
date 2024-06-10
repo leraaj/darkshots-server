@@ -1,7 +1,7 @@
 // UNFINISHED
 const mongoose = require("mongoose");
 
-const appointmentSchema = new mongoose.Schema(
+const applicationSchema = new mongoose.Schema(
   {
     job: {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,19 +13,7 @@ const appointmentSchema = new mongoose.Schema(
       ref: "Users",
       required: true,
     },
-    meetingLink: {
-      type: String,
-      required: true,
-    },
-    meetingTime: {
-      type: String,
-      required: true,
-    },
-    appointmentStatus: {
-      type: Number,
-      required: true,
-    },
-    phase: {
+    applicationStatus: {
       type: Number,
       required: true,
     },
@@ -37,6 +25,6 @@ const appointmentSchema = new mongoose.Schema(
 );
 
 // Create and export the Appointment model
-const AppointmentModel = mongoose.model("Appointment", appointmentSchema);
+const ApplicantModel = mongoose.model("Applicant", applicationSchema);
 
-module.exports = AppointmentModel;
+module.exports = ApplicantModel;

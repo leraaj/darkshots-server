@@ -43,11 +43,15 @@ const userSchema = new mongoose.Schema(
     applicationStatus: {
       type: Number,
       required: [true, "Please select status"],
-      // { value: 1, label: "All users" },
       // { value: 2, label: "Pending" },
-      // { value: 3, label: "For review" },
-      // { value: 4, label: "Accepted" },
-      // { value: 5, label: "Rejected" },
+      // { value: 3, label: "Accepted" },
+      // { value: 4, label: "Rejected" },
+    },
+    loggedIn: {
+      type: Number,
+      required: [true, "Please select status"],
+      // { value: 0 },
+      // { value: 1  }, User allowed to logged-in, at-least 1
     },
   },
   {
