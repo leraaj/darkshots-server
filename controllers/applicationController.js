@@ -192,6 +192,7 @@ const deleteApplication = async (request, response) => {
 module.exports = {
   getApplications,
   getApplication,
+  getNotification,
   addApplication,
   updateApplication,
   deleteApplication,
