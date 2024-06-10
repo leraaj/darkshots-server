@@ -1,8 +1,9 @@
 const ApplicationModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
 const getApplications = async (request, response) => {
+  const { id } = request.params;
   try {
-    const applications = await ApplicationModel.find({})
+    const applications = await ApplicationModel.findById(id)
       .populate("user", "fullName email")
       .populate("job", "title details")
       .select("job user applicationStatus createdAt updatedAt");
