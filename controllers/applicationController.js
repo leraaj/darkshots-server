@@ -11,7 +11,25 @@ const getApplications = async (request, response) => {
       return response.status(404).json({ message: "No applications found" });
     }
 
-    response.status(200).json(applications);
+    // Fetch all appointments
+    const appointments = await AppointmentModel.find({});
+
+    // Iterate over applications and add disabled field if conditions are met
+    const updatedApplications = applications.map((application) => {
+      const hasAppointment = appointments.some(
+        (appointment) =>
+          appointment.user.toString() === application.user._id.toString() &&
+          appointment.job.toString() === application.job._id.toString()
+      );
+
+      if (application.applicationStatus === 2 && hasAppointment) {
+        return { ...application.toObject(), disabled: true };
+      }
+
+      return application;
+    });
+
+    response.status(200).json(updatedApplications);
   } catch (error) {
     console.error(error.message);
     response.status(500).json({ message: "Internal Server Error" });
