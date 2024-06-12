@@ -136,10 +136,10 @@ const addApplication = async (request, response) => {
 const updateApplication = async (request, response) => {
   try {
     const { id } = request.params;
-    const { user, job, applicationStatus } = request.body;
+    const { user, job, applicationStatus, disabled } = request.body;
     const updatedApplication = await ApplicationModel.findByIdAndUpdate(
       id,
-      { user, job, applicationStatus },
+      { user, job, applicationStatus, disabled },
       { new: true }
     )
       .populate("user", "fullName _id")
@@ -206,7 +206,18 @@ const deleteApplication = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
-
+const deleteAllApplications = async (request, response) => {
+  try {
+    // Delete all applications
+    await ApplicationModel.deleteMany({});
+    response
+      .status(200)
+      .json({ message: "All applications deleted successfully." });
+  } catch (error) {
+    console.error(error.message);
+    response.status(500).json({ message: "Internal Server Error" });
+  }
+};
 module.exports = {
   getApplications,
   getApplication,
@@ -214,4 +225,5 @@ module.exports = {
   addApplication,
   updateApplication,
   deleteApplication,
+  deleteAllApplications,
 };

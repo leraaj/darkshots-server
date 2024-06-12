@@ -7,9 +7,11 @@ const {
   getApplication,
   updateApplication,
   getNotification,
+  deleteAllApplications,
 } = require("../controllers/applicationController");
 
 router.get("/applications", getApplications);
+router.delete("/applications", deleteAllApplications);
 router.post("/application", addApplication);
 router.post("/notifications/:id", getNotification);
 router.delete("/application/:id", deleteApplication);

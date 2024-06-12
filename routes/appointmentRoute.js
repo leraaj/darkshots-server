@@ -6,13 +6,14 @@ const {
   deleteAppointment,
   getAppointment,
   updateAppointment,
+  deleteAllAppointments,
 } = require("../controllers/appointmentController");
 
 router.get("/appointments", getAppointments);
+router.delete("/appointments", deleteAllAppointments);
 router.post("/appointment", addAppointment);
 router.delete("/appointment/:id", deleteAppointment);
 router.get("/appointment/:id", getAppointment);
 router.put("/appointment/:id", updateAppointment);
-// router.use(requireAuth);
 
 module.exports = router;

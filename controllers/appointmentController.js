@@ -122,11 +122,23 @@ const deleteAppointment = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
-
+const deleteAllAppointments = async (request, response) => {
+  try {
+    // Delete all applications
+    await AppointmentModel.deleteMany({});
+    response
+      .status(200)
+      .json({ message: "All applications deleted successfully." });
+  } catch (error) {
+    console.error(error.message);
+    response.status(500).json({ message: "Internal Server Error" });
+  }
+};
 module.exports = {
   getAppointments,
   getAppointment,
   addAppointment,
   updateAppointment,
   deleteAppointment,
+  deleteAllAppointments,
 };
