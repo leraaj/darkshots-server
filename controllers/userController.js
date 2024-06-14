@@ -130,27 +130,20 @@ const login = async (request, response) => {
 
     const passwordMatch = await bcrypt.compare(inputPassword, user.password);
     if (passwordMatch) {
-      if (user.loggedIn === 1) {
-        return response
-          .status(403)
-          .json({ message: "User is already logged in" });
-      } else {
-        const userToken = createToken(user.id);
-        await UserModel.findByIdAndUpdate(user._id, { loggedIn: 1 });
-
-        return response
-          .cookie("Auth_Token", userToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: cookieExpires,
-          })
-          .status(200)
-          .json({
-            user,
-            token: userToken,
-          });
-      }
+      const userToken = createToken(user.id);
+      await UserModel.findByIdAndUpdate(user._id);
+      return response
+        .cookie("Auth_Token", userToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "None",
+          maxAge: cookieExpires,
+        })
+        .status(200)
+        .json({
+          user,
+          token: userToken,
+        });
     } else {
       response.status(401).json({ message: "Invalid username or password" });
     }
@@ -163,7 +156,7 @@ const logout = async (request, response) => {
   try {
     const { id } = request.params;
 
-    await UserModel.findByIdAndUpdate(id, { loggedIn: 0 });
+    await UserModel.findByIdAndUpdate(id);
 
     response.clearCookie("Auth_Token", {
       httpOnly: true,

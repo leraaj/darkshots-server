@@ -47,44 +47,26 @@ const userSchema = new mongoose.Schema(
       // { value: 3, label: "Accepted" },
       // { value: 4, label: "Rejected" },
     },
-    loggedIn: {
-      type: Number,
-      required: [true, "Please select status"],
-      // { value: 0 },
-      // { value: 1  }, User allowed to logged-in, at-least 1
+    // loggedIn: {
+    //   type: Number,
+    //   required: [true, "Please select status"],
+    //   // { value: 0 },
+    //   // { value: 1 }, User allowed to logged-in, at least 1
+    // },
+    currentDeviceId: {
+      type: String,
     },
   },
   {
     timestamps: true,
   }
 );
+
 userSchema.pre("save", async function (next) {
-  const salt = await bcrypt.genSalt();
-  this.password = await bcrypt.hash(this.password, salt);
-  console.log("user about to be created & saved", this);
-  next();
-});
-userSchema.post("save", function (doc, next) {
-  console.log("new user was created & saved", doc);
-  next();
-});
-userSchema.pre("findOneAndUpdate", async function (next) {
-  try {
-    if (this._update.password) {
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(
-        this._update.password,
-        saltRounds
-      );
-      this._update.password = hashedPassword;
-      next();
-    }
-  } catch (error) {
-    next(error);
+  if (this.isModified("password") || this.isNew) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(this.password, salt);
   }
-});
-userSchema.post("findOneAndUpdate", function (doc, next) {
-  console.log("user was updated & saved", doc);
   next();
 });
 

@@ -3,7 +3,7 @@ const AppointmentModel = require("../model/appointmentModel");
 const getApplications = async (request, response) => {
   try {
     const applications = await ApplicationModel.find({})
-      .populate("user", "fullName email")
+      .populate("user", "fullName email contact")
       .populate("job", "title details")
       .select("job user applicationStatus createdAt updatedAt");
 
@@ -21,11 +21,9 @@ const getApplications = async (request, response) => {
           appointment.user.toString() === application.user._id.toString() &&
           appointment.job.toString() === application.job._id.toString()
       );
-
       if (application.applicationStatus === 2 && hasAppointment) {
         return { ...application.toObject(), disabled: true };
       }
-
       return application;
     });
 
