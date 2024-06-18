@@ -1,7 +1,9 @@
 const UserModel = require("../model/userModel");
+const ApplicationModel = require("../model/applicationModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const checkForDuplicates = require("../middleware/checkForDuplicates");
+const AppointmentModel = require("../model/appointmentModel");
 require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -14,8 +16,41 @@ const createToken = (id) => {
 
 const getUsers = async (request, response) => {
   try {
-    const userLists = await UserModel.find({});
-    response.status(200).json(userLists);
+    // Fetch all users
+    const users = await UserModel.find({});
+
+    // Array to hold promises for counting applications with status 1 for each user
+    const promises = users.map(async (user) => {
+      // Count applications where user matches and applicationStatus is 1
+      const applicationStatus1 = await ApplicationModel.countDocuments({
+        user: user._id, // Match applications for this user
+        applicationStatus: 1, // Count applications with applicationStatus 1
+      });
+      const applicationStatus2AndNoDisable =
+        await ApplicationModel.countDocuments({
+          user: user._id, // Match applications for this user
+          applicationStatus: 2, // Count applications with applicationStatus 1
+          disabled: false,
+        });
+      const applicationTasks =
+        applicationStatus1 + applicationStatus2AndNoDisable;
+
+      const appointmentStatus1 = await AppointmentModel.countDocuments({
+        user: user._id, // Match applications for this user
+        appointmentStatus: 1, // Count applications with applicationStatus 1
+      });
+      const appointmentTasks = appointmentStatus1;
+      return {
+        ...user.toObject(), // Convert Mongoose document to plain object
+        applicationTasks: applicationTasks,
+        appointmentTasks: appointmentTasks,
+      };
+    });
+
+    // Execute all promises concurrently
+    const usersWithStatusCount = await Promise.all(promises);
+
+    response.status(200).json(usersWithStatusCount);
   } catch (error) {
     console.error("Error in getUsers:", error.message);
     response.status(500).json({ message: error.message });

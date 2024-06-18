@@ -1,33 +1,18 @@
 const ApplicationModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
+
 const getApplications = async (request, response) => {
   try {
     const applications = await ApplicationModel.find({})
       .populate("user", "fullName email contact")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt");
+      .select("job user applicationStatus createdAt updatedAt disabled ");
 
     if (!applications.length) {
       return response.status(404).json({ message: "No applications found" });
     }
 
-    // Fetch all appointments
-    const appointments = await AppointmentModel.find({});
-
-    // Iterate over applications and add disabled field if conditions are met
-    const updatedApplications = applications.map((application) => {
-      const hasAppointment = appointments.some(
-        (appointment) =>
-          appointment.user.toString() === application.user._id.toString() &&
-          appointment.job.toString() === application.job._id.toString()
-      );
-      if (application.applicationStatus === 2 && hasAppointment) {
-        return { ...application.toObject(), disabled: true };
-      }
-      return application;
-    });
-
-    response.status(200).json(updatedApplications);
+    response.status(200).json(applications);
   } catch (error) {
     console.error(error.message);
     response.status(500).json({ message: "Internal Server Error" });
@@ -40,8 +25,8 @@ const getApplication = async (request, response) => {
     const application = await ApplicationModel.findById(id)
       .populate("user", "fullName email")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt");
-    // Select the job, user, and status fields
+      .select("job user applicationStatus disabled createdAt updatedAt  ");
+
     if (!application) {
       return response
         .status(404)
@@ -54,35 +39,45 @@ const getApplication = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
+const getApplicationByUser = async (request, response) => {
+  try {
+    const { id } = request.params;
+    const applications = await ApplicationModel.find({ user: id })
+      .populate("user", "_id fullName email contact")
+      .populate("job", "title details")
+      .select("job user applicationStatus disabled createdAt updatedAt  ");
+
+    if (!applications || applications.length === 0) {
+      return response
+        .status(404)
+        .json({ message: "No applications found for this user" });
+    }
+
+    response.status(200).json(applications);
+  } catch (error) {
+    console.error(error.message);
+    response.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 const getNotification = async (req, res) => {
   try {
     const { id } = req.params;
-    // Fetch Appointment data
     const appointments = await AppointmentModel.find({ user: id })
       .populate("user", "fullName position email")
       .populate("job", "title details")
       .select("job user meetingLink meetingTime appointmentStatus createdAt");
 
-    // Fetch Application data
     const applications = await ApplicationModel.find({ user: id })
       .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select(
-        "job user applicationStatus createdAt updatedAt  phase createdAt"
-      );
+      .select("job user applicationStatus createdAt updatedAt disabled phase");
 
-    // Combine the results into a single array
     const notifications = [
-      ...appointments.map((appointment) => ({
-        ...appointment._doc,
-      })),
-      ...applications.map((application) => ({
-        ...application._doc,
-      })),
+      ...appointments.map((appointment) => ({ ...appointment._doc })),
+      ...applications.map((application) => ({ ...application._doc })),
     ];
 
-    // Sort the combined array by createdAt in descending order
     notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     if (notifications.length === 0) {
@@ -105,28 +100,13 @@ const addApplication = async (request, response) => {
       job: jobId,
       user: userId,
       applicationStatus: applicationStatus,
+      disabled: false,
     });
-    // Validate the user data
+
     await application.validate();
-    // If validation passes, save the user
     const addedCategory = await application.save();
     return response.status(201).json(addedCategory);
   } catch (error) {
-    // const validationErrors = {};
-    // if (error.name === "ValidationError") {
-    //   // Validation error occurred
-    //   if (error.errors && Object.keys(error.errors).length > 0) {
-    //     // Extract and send specific validation error messages
-    //     for (const field in error.errors) {
-    //       validationErrors[field] = error.errors[field].message;
-    //     }
-    //   }
-    //   response.status(400).json({ errors: validationErrors });
-    // } else {
-    //   // Other types of errors (e.g., server error)
-    //   console.error(error.message);
-    //   response.status(500).json({ message: "Internal Server Error" });
-    // }
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -142,46 +122,16 @@ const updateApplication = async (request, response) => {
     )
       .populate("user", "fullName _id")
       .populate("job", "title _id ")
-      .select("job user applicationStatus");
-    console.log(updatedApplication);
+      .select("job user applicationStatus disabled");
 
-    // if (!updatedApplication) {
-    //   return response
-    //     .status(404)
-    //     .json({ message: `Cannot find any application with ID: ${id}` });
-    // }
-
-    // const { jobId, userId } = updatedApplication;
-
-    // // Populate user and job fields
-    // await updatedApplication.ApplicationModel.findById(id)
-    //   .populate("user", "_id fullName")
-    //   .populate("job", "_id title")
-    //   .execPopulate();
-    // // Check if the status is equal to 2
-    // if (updatedApplication.status === 2) {
-    //   // Create a new appointment with status 1
-    //   const newAppointment = new AppointmentModel({
-    //     job: jobId,
-    //     user: userId,
-    //     status: 1, // Set appointment status to 1
-    //     phase: 1, // 1 equal to pending, 2
-    //   });
-
-    //   // Save the new appointment
-    //   await newAppointment.save();
-    // }
-    // Return updated application
-    response.status(200).json(updatedApplication);
+    response.status(200).json({ message: updatedApplication });
   } catch (error) {
     if (error.code === 11000 || error.code === 11001) {
-      // Handle duplicate field error here
       return response.status(400).json({
         message: "Duplicate field value. This value already exists.",
-        field: error.keyValue, // The duplicate field and value
+        field: error.keyValue,
       });
     }
-    // Other validation or save errors
     response.status(500).json({ message: error.message, status: error.status });
   }
 };
@@ -193,20 +143,22 @@ const deleteApplication = async (request, response) => {
       .populate("user", "fullName email")
       .populate("job", "title details")
       .select("job user status createdAt updatedAt");
+
     if (!deletedApplication) {
       return response
         .status(404)
         .json({ message: `Cannot find any application with ID: ${id}` });
     }
+
     response.status(200).json(deletedApplication);
   } catch (error) {
     console.error(error.message);
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 const deleteAllApplications = async (request, response) => {
   try {
-    // Delete all applications
     await ApplicationModel.deleteMany({});
     response
       .status(200)
@@ -214,6 +166,31 @@ const deleteAllApplications = async (request, response) => {
   } catch (error) {
     console.error(error.message);
     response.status(500).json({ message: "Internal Server Error" });
+  }
+};
+const countUnfinishedPending = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await ApplicationModel.countDocuments({
+      user: id,
+      applicationStatus: 1,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const countUnfinishedProgress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await ApplicationModel.countDocuments({
+      user: id,
+      applicationStatus: 2,
+      disabled: false,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 module.exports = {
@@ -224,4 +201,7 @@ module.exports = {
   updateApplication,
   deleteApplication,
   deleteAllApplications,
+  getApplicationByUser,
+  countUnfinishedPending,
+  countUnfinishedProgress,
 };

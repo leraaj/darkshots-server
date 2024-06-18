@@ -37,18 +37,39 @@ const getAppointment = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
+const getAppointmentByUser = async (request, response) => {
+  try {
+    const { id } = request.params;
+    const appointments = await AppointmentModel.find({ user: id })
+      .populate("user", "_id fullName email contact")
+      .populate("job", "title details")
+      .select(
+        "job user appointmentStatus phase disabled createdAt updatedAt  "
+      );
 
+    if (!appointments || appointments.length === 0) {
+      return response
+        .status(404)
+        .json({ message: "No applications found for this user" });
+    }
+
+    response.status(200).json(appointments);
+  } catch (error) {
+    console.error(error.message);
+    response.status(500).json({ message: "Internal Server Error" });
+  }
+};
 const addAppointment = async (request, response) => {
   try {
     const { userId, jobId, meetingLink, meetingTime } = request.body;
     console.log("inputs", userId, jobId, meetingLink, meetingTime);
     const appointment = new AppointmentModel({
-      job: jobId,
       user: userId,
-      appointmentStatus: 1,
-      phase: 1,
+      job: jobId,
       meetingLink: meetingLink,
       meetingTime: meetingTime,
+      appointmentStatus: 1,
+      phase: -1,
     });
     // Validate the user data
     await appointment.validate();
@@ -56,32 +77,16 @@ const addAppointment = async (request, response) => {
     const addedAppointment = await appointment.save();
     return response.status(201).json(addedAppointment);
   } catch (error) {
-    // const validationErrors = {};
-    // if (error.name === "ValidationError") {
-    //   // Validation error occurred
-    //   if (error.errors && Object.keys(error.errors).length > 0) {
-    //     // Extract and send specific validation error messages
-    //     for (const field in error.errors) {
-    //       validationErrors[field] = error.errors[field].message;
-    //     }
-    //   }
-    //   response.status(400).json({ errors: validationErrors });
-    // } else {
-    //   // Other types of errors (e.g., server error)
-    //   console.error(error.message);
-    //   response.status(500).json({ message: "Internal Server Error" });
-    // }
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 const updateAppointment = async (request, response) => {
   try {
     const { id } = request.params;
-    const { appointmentStatus, phase } = request.body;
+    const { appointmentStatus, phase, disabled } = request.body;
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
-      { id, appointmentStatus, phase },
+      { id, appointmentStatus, phase: null, disabled },
       { new: true }
     );
 
@@ -134,9 +139,11 @@ const deleteAllAppointments = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 module.exports = {
   getAppointments,
   getAppointment,
+  getAppointmentByUser,
   addAppointment,
   updateAppointment,
   deleteAppointment,
