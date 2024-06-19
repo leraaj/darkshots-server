@@ -22,7 +22,7 @@ const getAppointment = async (request, response) => {
       .populate("user", "fullName email")
       .populate("job", "title details")
       .select(
-        "job user appointmentStatus phase meetingLink meetingTime createdAt updatedAt"
+        "job user appointmentStatus phase meetingLink meetingTime  initialRemarks finalRemarks clientRemarks  createdAt updatedAt"
       );
     // Select the job, user, and status fields
     if (!appointment) {
@@ -44,7 +44,7 @@ const getAppointmentByUser = async (request, response) => {
       .populate("user", "_id fullName email contact")
       .populate("job", "title details")
       .select(
-        "job user appointmentStatus phase disabled createdAt updatedAt  "
+        "job user appointmentStatus phase disabled initialRemarks finalRemarks clientRemarks createdAt updatedAt "
       );
 
     if (!appointments || appointments.length === 0) {

@@ -29,16 +29,14 @@ const appointmentSchema = new mongoose.Schema(
       type: Number,
       // required: true,
     },
-    remarks: {
-      type: [
-        {
-          type: {
-            type: String,
-            enum: ["phase1", "phase2", "phase3", "phase-1"],
-          },
-          content: String,
-        },
-      ],
+    initialRemarks: {
+      type: String,
+    },
+    finalRemarks: {
+      type: String,
+    },
+    clientRemarks: {
+      type: String,
     },
     // Add Supporting Doc Ex. CV / Resume
   },
