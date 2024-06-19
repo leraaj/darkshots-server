@@ -83,11 +83,31 @@ const addAppointment = async (request, response) => {
 const updateAppointment = async (request, response) => {
   try {
     const { id } = request.params;
-    const { appointmentStatus, phase, disabled, meetingLink, meetingTime } =
-      request.body;
+    const {
+      appointmentStatus,
+      phase,
+      disabled,
+      meetingLink,
+      meetingTime,
+      // Remarks
+      initialRemarks,
+      finalRemarks,
+      clientRemarks,
+    } = request.body;
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
-      { id, appointmentStatus, phase, disabled, meetingLink, meetingTime },
+      {
+        id,
+        appointmentStatus,
+        phase,
+        disabled,
+        meetingLink,
+        meetingTime,
+        // Remarks
+        initialRemarks,
+        finalRemarks,
+        clientRemarks,
+      },
       { new: true }
     );
 
