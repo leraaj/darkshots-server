@@ -15,19 +15,19 @@ const appointmentSchema = new mongoose.Schema(
     },
     meetingLink: {
       type: String,
-      required: true,
+      // required: true,
     },
     meetingTime: {
       type: String,
-      required: true,
+      // required: true,
     },
     appointmentStatus: {
       type: Number,
-      required: true,
+      // required: true,
     },
     phase: {
       type: Number,
-      required: true,
+      // required: true,
     },
     remarks: {
       type: [

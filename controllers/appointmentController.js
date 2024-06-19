@@ -69,7 +69,7 @@ const addAppointment = async (request, response) => {
       meetingLink: meetingLink,
       meetingTime: meetingTime,
       appointmentStatus: 1,
-      phase: -1,
+      phase: 0,
     });
     // Validate the user data
     await appointment.validate();
@@ -83,10 +83,11 @@ const addAppointment = async (request, response) => {
 const updateAppointment = async (request, response) => {
   try {
     const { id } = request.params;
-    const { appointmentStatus, phase, disabled } = request.body;
+    const { appointmentStatus, phase, disabled, meetingLink, meetingTime } =
+      request.body;
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
-      { id, appointmentStatus, phase: null, disabled },
+      { id, appointmentStatus, phase, disabled, meetingLink, meetingTime },
       { new: true }
     );
 
@@ -97,13 +98,6 @@ const updateAppointment = async (request, response) => {
     }
     response.status(200).json({ updatedAppointment });
   } catch (error) {
-    if (error.code === 11000 || error.code === 11001) {
-      // Handle duplicate field error here
-      return response.status(400).json({
-        message: "Duplicate field value. This value already exists.",
-        field: error.keyValue, // The duplicate field and value
-      });
-    }
     // Other validation or save errors
     response.status(500).json({ message: error.message, status: error.status });
   }
