@@ -66,12 +66,14 @@ const getNotification = async (req, res) => {
     const appointments = await AppointmentModel.find({ user: id })
       .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select("job user meetingLink meetingTime appointmentStatus createdAt");
+      .select(
+        "job user meetingLink meetingTime appointmentStatus phase createdAt"
+      );
 
     const applications = await ApplicationModel.find({ user: id })
       .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt disabled phase");
+      .select("job user applicationStatus createdAt updatedAt disabled");
 
     const notifications = [
       ...appointments.map((appointment) => ({ ...appointment._doc })),
