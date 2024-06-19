@@ -35,11 +35,23 @@ const getUsers = async (request, response) => {
       const applicationTasks =
         applicationStatus1 + applicationStatus2AndNoDisable;
 
-      const appointmentStatus1 = await AppointmentModel.countDocuments({
+      const initialScreening = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
-        appointmentStatus: 1, // Count applications with applicationStatus 1
+        phase: 1,
+        appointmentStatus: 2,
       });
-      const appointmentTasks = appointmentStatus1;
+      const finalInterview = await AppointmentModel.countDocuments({
+        user: user._id, // Match applications for this user
+        phase: 2,
+        appointmentStatus: 2,
+      });
+      const teamIntroduction = await AppointmentModel.countDocuments({
+        user: user._id, // Match applications for this user
+        phase: 2,
+        appointmentStatus: 2,
+      });
+      const appointmentTasks =
+        initialScreening + finalInterview + teamIntroduction;
       return {
         ...user.toObject(), // Convert Mongoose document to plain object
         applicationTasks: applicationTasks,

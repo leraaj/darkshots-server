@@ -53,9 +53,6 @@ const userSchema = new mongoose.Schema(
     //   // { value: 0 },
     //   // { value: 1 }, User allowed to logged-in, at least 1
     // },
-    currentDeviceId: {
-      type: String,
-    },
   },
   {
     timestamps: true,
