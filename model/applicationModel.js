@@ -17,8 +17,10 @@ const applicationSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    phase: {
+      type: Number,
+    },
     disabled: { type: Boolean, default: false },
-    // Add Supporting Doc Ex. CV / Resume
   },
   {
     timestamps: true,

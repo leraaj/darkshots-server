@@ -22,36 +22,38 @@ const getUsers = async (request, response) => {
     // Array to hold promises for counting applications with status 1 for each user
     const promises = users.map(async (user) => {
       // Count applications where user matches and applicationStatus is 1
-      const applicationStatus1 = await ApplicationModel.countDocuments({
-        user: user._id, // Match applications for this user
-        applicationStatus: 1, // Count applications with applicationStatus 1
+      const ApplicationPending = await ApplicationModel.countDocuments({
+        user: user._id,
+        phase: 1,
+        applicationStatus: 1,
       });
-      const applicationStatus2AndNoDisable =
-        await ApplicationModel.countDocuments({
-          user: user._id, // Match applications for this user
-          applicationStatus: 2, // Count applications with applicationStatus 1
-          disabled: false,
-        });
-      const applicationTasks =
-        applicationStatus1 + applicationStatus2AndNoDisable;
+      const ApplicationInProgress = await ApplicationModel.countDocuments({
+        user: user._id,
+        phase: 1,
+        applicationStatus: 2,
+      });
+      const applicationTasks = ApplicationPending + ApplicationInProgress;
 
       const initialScreening = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
         phase: 1,
-        appointmentStatus: 2,
+        appointmentStatus: 1,
+        complete: 0,
       });
       const finalInterview = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
         phase: 2,
-        appointmentStatus: 2,
+        appointmentStatus: 1,
+        complete: 0,
       });
-      const teamIntroduction = await AppointmentModel.countDocuments({
+      const clientInterview = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
-        phase: 2,
-        appointmentStatus: 2,
+        phase: 3,
+        appointmentStatus: 1,
+        complete: 0,
       });
       const appointmentTasks =
-        initialScreening + finalInterview + teamIntroduction;
+        initialScreening + finalInterview + clientInterview;
       return {
         ...user.toObject(), // Convert Mongoose document to plain object
         applicationTasks: applicationTasks,

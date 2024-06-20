@@ -97,12 +97,13 @@ const getNotification = async (req, res) => {
 
 const addApplication = async (request, response) => {
   try {
-    const { userId, jobId, applicationStatus } = request.body;
+    const { userId, jobId } = request.body;
     const application = new ApplicationModel({
       job: jobId,
       user: userId,
-      applicationStatus: applicationStatus,
-      disabled: false,
+      phase: 1,
+      applicationStatus: 1,
+      complete: 0,
     });
 
     await application.validate();
@@ -116,15 +117,15 @@ const addApplication = async (request, response) => {
 const updateApplication = async (request, response) => {
   try {
     const { id } = request.params;
-    const { user, job, applicationStatus, disabled } = request.body;
+    const { applicationStatus, phase, complete } = request.body;
     const updatedApplication = await ApplicationModel.findByIdAndUpdate(
       id,
-      { user, job, applicationStatus, disabled },
+      { user, job, applicationStatus, phase, complete },
       { new: true }
     )
       .populate("user", "fullName _id")
       .populate("job", "title _id ")
-      .select("job user applicationStatus disabled");
+      .select("job user applicationStatus phase complete disabled");
 
     response.status(200).json({ message: updatedApplication });
   } catch (error) {

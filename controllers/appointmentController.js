@@ -62,14 +62,14 @@ const getAppointmentByUser = async (request, response) => {
 const addAppointment = async (request, response) => {
   try {
     const { userId, jobId, meetingLink, meetingTime } = request.body;
-    console.log("inputs", userId, jobId, meetingLink, meetingTime);
     const appointment = new AppointmentModel({
       user: userId,
       job: jobId,
       meetingLink: meetingLink,
       meetingTime: meetingTime,
+      phase: 1,
       appointmentStatus: 1,
-      phase: 0,
+      complete: 0,
     });
     // Validate the user data
     await appointment.validate();
@@ -86,7 +86,7 @@ const updateAppointment = async (request, response) => {
     const {
       appointmentStatus,
       phase,
-      disabled,
+      complete,
       meetingLink,
       meetingTime,
       // Remarks
@@ -97,10 +97,9 @@ const updateAppointment = async (request, response) => {
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
       {
-        id,
         appointmentStatus,
         phase,
-        disabled,
+        complete,
         meetingLink,
         meetingTime,
         // Remarks
