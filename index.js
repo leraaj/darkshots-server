@@ -18,6 +18,7 @@ app.use(
       APP,
       "https://git-app-eal7.onrender.com",
       "https://darkshot-web.onrender.com",
+      "*",
     ],
   })
 );
