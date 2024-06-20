@@ -7,7 +7,7 @@ const getApplications = async (request, response) => {
       .populate("user", "fullName email contact")
       .populate("job", "title details")
       .select(
-        "job user phase applicationStatus complete createdAt updatedAt disabled "
+        "job user applicationStatus phase complete createdAt updatedAt disabled "
       );
 
     if (!applications.length) {
@@ -27,7 +27,9 @@ const getApplication = async (request, response) => {
     const application = await ApplicationModel.findById(id)
       .populate("user", "fullName email")
       .populate("job", "title details")
-      .select("job user applicationStatus disabled createdAt updatedAt  ");
+      .select(
+        "job user applicationStatus  phase complete  createdAt updatedAt  "
+      );
 
     if (!application) {
       return response
