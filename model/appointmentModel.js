@@ -21,11 +21,11 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       // required: true,
     },
-    appointmentStatus: {
+    phase: {
       type: Number,
       default: 1,
     },
-    phase: {
+    appointmentStatus: {
       type: Number,
       default: 1,
     },

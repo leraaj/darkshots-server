@@ -13,17 +13,14 @@ const applicationSchema = new mongoose.Schema(
       ref: "Users",
       required: true,
     },
-    applicationStatus: {
-      type: Number,
-      default: 1,
-    },
     phase: {
       type: Number,
-      default: 1,
+    },
+    applicationStatus: {
+      type: Number,
     },
     complete: {
       type: Number,
-      default: 0,
     },
   },
   {
