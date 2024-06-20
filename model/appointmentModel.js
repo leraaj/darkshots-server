@@ -23,11 +23,15 @@ const appointmentSchema = new mongoose.Schema(
     },
     appointmentStatus: {
       type: Number,
-      // required: true,
+      default: 1,
     },
     phase: {
       type: Number,
-      // required: true,
+      default: 1,
+    },
+    complete: {
+      type: Number,
+      default: 0,
     },
     initialRemarks: {
       type: String,

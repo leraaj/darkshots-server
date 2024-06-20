@@ -15,12 +15,16 @@ const applicationSchema = new mongoose.Schema(
     },
     applicationStatus: {
       type: Number,
-      required: true,
+      default: 1,
     },
     phase: {
       type: Number,
+      default: 1,
     },
-    disabled: { type: Boolean, default: false },
+    complete: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
