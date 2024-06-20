@@ -6,7 +6,7 @@ const getApplications = async (request, response) => {
     const applications = await ApplicationModel.find({})
       .populate("user", "fullName email contact")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt disabled ");
+      .select("job user phase applicationStatus createdAt updatedAt disabled ");
 
     if (!applications.length) {
       return response.status(404).json({ message: "No applications found" });
@@ -98,40 +98,16 @@ const getNotification = async (req, res) => {
 const addApplication = async (request, response) => {
   try {
     const { userId, jobId } = request.body;
-
-    // Fetch job details
-    const job = await JobModel.findById(jobId);
-    if (!job) {
-      return response.status(404).json({ message: "Job not found" });
-    }
-
-    // Fetch user details
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return response.status(404).json({ message: "User not found" });
-    }
-
-    // Create a new application with embedded job and user details
+    console.log(userId, jobId);
     const application = new ApplicationModel({
-      job: {
-        _id: job._id,
-        title: job.title,
-        details: job.details,
-      },
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        contact: user.contact,
-        email: user.email,
-      },
+      job: jobId,
+      user: userId,
       phase: 1,
       applicationStatus: 1,
       complete: 0,
     });
-
     await application.validate();
     const addedApplication = await application.save();
-    console.log(addedApplication);
     return response.status(201).json(addedApplication);
   } catch (error) {
     response.status(500).json({ message: "Internal Server Error" });
