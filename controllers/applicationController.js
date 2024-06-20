@@ -98,17 +98,41 @@ const getNotification = async (req, res) => {
 const addApplication = async (request, response) => {
   try {
     const { userId, jobId } = request.body;
+
+    // Fetch job details
+    const job = await JobModel.findById(jobId);
+    if (!job) {
+      return response.status(404).json({ message: "Job not found" });
+    }
+
+    // Fetch user details
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return response.status(404).json({ message: "User not found" });
+    }
+
+    // Create a new application with embedded job and user details
     const application = new ApplicationModel({
-      job: jobId,
-      user: userId,
+      job: {
+        _id: job._id,
+        title: job.title,
+        details: job.details,
+      },
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        contact: user.contact,
+        email: user.email,
+      },
       phase: 1,
       applicationStatus: 1,
       complete: 0,
     });
 
     await application.validate();
-    const addedCategory = await application.save();
-    return response.status(201).json(addedCategory);
+    const addedApplication = await application.save();
+    console.log(addedApplication);
+    return response.status(201).json(addedApplication);
   } catch (error) {
     response.status(500).json({ message: "Internal Server Error" });
   }
