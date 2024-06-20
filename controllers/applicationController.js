@@ -6,7 +6,9 @@ const getApplications = async (request, response) => {
     const applications = await ApplicationModel.find({})
       .populate("user", "fullName email contact")
       .populate("job", "title details")
-      .select("job user phase applicationStatus createdAt updatedAt disabled ");
+      .select(
+        "job user phase applicationStatus complete createdAt updatedAt disabled "
+      );
 
     if (!applications.length) {
       return response.status(404).json({ message: "No applications found" });
@@ -67,13 +69,15 @@ const getNotification = async (req, res) => {
       .populate("user", "fullName position email")
       .populate("job", "title details")
       .select(
-        "job user meetingLink meetingTime appointmentStatus phase createdAt"
+        "job user meetingLink meetingTime appointmentStatus phase complete createdAt"
       );
 
     const applications = await ApplicationModel.find({ user: id })
       .populate("user", "fullName position email")
       .populate("job", "title details")
-      .select("job user applicationStatus createdAt updatedAt disabled");
+      .select(
+        "job user applicationStatus phase complete createdAt updatedAt disabled"
+      );
 
     const notifications = [
       ...appointments.map((appointment) => ({ ...appointment._doc })),
