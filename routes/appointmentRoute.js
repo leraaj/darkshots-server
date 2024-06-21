@@ -8,6 +8,10 @@ const {
   deleteAppointment,
   updateAppointment,
   deleteAllAppointments,
+  countAwaiting,
+  countInitial,
+  countFinal,
+  countBriefing,
 } = require("../controllers/appointmentController");
 
 router.get("/appointments", getAppointments);
@@ -17,5 +21,9 @@ router.delete("/appointments", deleteAllAppointments);
 router.post("/appointment", addAppointment);
 router.delete("/appointment/:id", deleteAppointment);
 router.put("/appointment/:id", updateAppointment);
-
+// Counting Pending Appointments
+router.get("/countWaiting/:id", countAwaiting);
+router.get("/countInitial/:id", countInitial);
+router.get("/countFinal/:id", countFinal);
+router.get("/countBriefing/:id", countBriefing);
 module.exports = router;

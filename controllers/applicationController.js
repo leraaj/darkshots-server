@@ -49,7 +49,9 @@ const getApplicationByUser = async (request, response) => {
     const applications = await ApplicationModel.find({ user: id })
       .populate("user", "_id fullName email contact")
       .populate("job", "title details")
-      .select("job user applicationStatus disabled createdAt updatedAt  ");
+      .select(
+        "job user applicationStatus  phase complete  createdAt updatedAt  "
+      );
 
     if (!applications || applications.length === 0) {
       return response
@@ -124,9 +126,10 @@ const updateApplication = async (request, response) => {
   try {
     const { id } = request.params;
     const { applicationStatus, phase, complete } = request.body;
+    console.log(request.body);
     const updatedApplication = await ApplicationModel.findByIdAndUpdate(
       id,
-      { user, job, applicationStatus, phase, complete },
+      { applicationStatus, phase, complete },
       { new: true }
     )
       .populate("user", "fullName _id")
@@ -182,7 +185,9 @@ const countUnfinishedPending = async (req, res) => {
     const { id } = req.params;
     const count = await ApplicationModel.countDocuments({
       user: id,
+      phase: 1,
       applicationStatus: 1,
+      complete: 0,
     });
     res.status(200).json({ count });
   } catch (error) {
@@ -194,8 +199,9 @@ const countUnfinishedProgress = async (req, res) => {
     const { id } = req.params;
     const count = await ApplicationModel.countDocuments({
       user: id,
+      phase: 1,
       applicationStatus: 2,
-      disabled: false,
+      complete: 0,
     });
     res.status(200).json({ count });
   } catch (error) {

@@ -6,7 +6,7 @@ const getAppointments = async (request, response) => {
       .populate("user", "fullName _id")
       .populate("job", "title _id")
       .select(
-        "job user appointmentStatus meetingLink meetingTime phase createdAt updatedAt"
+        "job user  phase  appointmentStatus complete meetingLink meetingTime initialRemarks finalRemarks hiringRemarks   createdAt updatedAt"
       );
     response.status(200).json(appointments);
   } catch (error) {
@@ -22,7 +22,7 @@ const getAppointment = async (request, response) => {
       .populate("user", "fullName email")
       .populate("job", "title details")
       .select(
-        "job user appointmentStatus phase meetingLink meetingTime  initialRemarks finalRemarks clientRemarks  createdAt updatedAt"
+        "job user phase  appointmentStatus complete meetingLink meetingTime   initialRemarks finalRemarks hiringRemarks    createdAt updatedAt"
       );
     // Select the job, user, and status fields
     if (!appointment) {
@@ -44,7 +44,7 @@ const getAppointmentByUser = async (request, response) => {
       .populate("user", "_id fullName email contact")
       .populate("job", "title details")
       .select(
-        "job user appointmentStatus phase disabled initialRemarks finalRemarks clientRemarks createdAt updatedAt "
+        "job user phase appointmentStatus complete initialRemarks finalRemarks hiringRemarks createdAt updatedAt "
       );
 
     if (!appointments || appointments.length === 0) {
@@ -92,7 +92,7 @@ const updateAppointment = async (request, response) => {
       // Remarks
       initialRemarks,
       finalRemarks,
-      clientRemarks,
+      hiringRemarks,
     } = request.body;
     const updatedAppointment = await AppointmentModel.findByIdAndUpdate(
       id,
@@ -105,7 +105,7 @@ const updateAppointment = async (request, response) => {
         // Remarks
         initialRemarks,
         finalRemarks,
-        clientRemarks,
+        hiringRemarks,
       },
       { new: true }
     );
@@ -152,7 +152,62 @@ const deleteAllAppointments = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
-
+// Count Tabs in Appointment modal
+const countAwaiting = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await AppointmentModel.countDocuments({
+      user: id,
+      appointmentStatus: 1,
+      complete: 0,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const countInitial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await AppointmentModel.countDocuments({
+      user: id,
+      phase: 1,
+      appointmentStatus: 2,
+      complete: 0,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const countFinal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await AppointmentModel.countDocuments({
+      user: id,
+      phase: 2,
+      appointmentStatus: 2,
+      complete: 0,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const countBriefing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const count = await AppointmentModel.countDocuments({
+      user: id,
+      phase: 3,
+      appointmentStatus: 2,
+      complete: 0,
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   getAppointments,
   getAppointment,
@@ -161,4 +216,8 @@ module.exports = {
   updateAppointment,
   deleteAppointment,
   deleteAllAppointments,
+  countAwaiting,
+  countInitial,
+  countFinal,
+  countBriefing,
 };

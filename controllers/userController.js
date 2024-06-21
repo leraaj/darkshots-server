@@ -26,30 +26,32 @@ const getUsers = async (request, response) => {
         user: user._id,
         phase: 1,
         applicationStatus: 1,
+        complete: 0,
       });
       const ApplicationInProgress = await ApplicationModel.countDocuments({
         user: user._id,
         phase: 1,
         applicationStatus: 2,
+        complete: 0,
       });
       const applicationTasks = ApplicationPending + ApplicationInProgress;
 
       const initialScreening = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
         phase: 1,
-        appointmentStatus: 1,
+        appointmentStatus: 2,
         complete: 0,
       });
       const finalInterview = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
         phase: 2,
-        appointmentStatus: 1,
+        appointmentStatus: 2,
         complete: 0,
       });
       const clientInterview = await AppointmentModel.countDocuments({
         user: user._id, // Match applications for this user
         phase: 3,
-        appointmentStatus: 1,
+        appointmentStatus: 2,
         complete: 0,
       });
       const appointmentTasks =

@@ -39,7 +39,7 @@ const appointmentSchema = new mongoose.Schema(
     finalRemarks: {
       type: String,
     },
-    clientRemarks: {
+    hiringRemarks: {
       type: String,
     },
     // Add Supporting Doc Ex. CV / Resume
