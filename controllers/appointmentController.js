@@ -37,6 +37,27 @@ const getAppointment = async (request, response) => {
     response.status(500).json({ message: "Internal Server Error" });
   }
 };
+const getHiredApplicants = async (req, res) => {
+  try {
+    const appointments = await AppointmentModel.find({
+      phase: 3,
+      appointmentStatus: 2,
+      complete: 1,
+    })
+      .populate("user")
+      .populate("job");
+
+    const users = appointments.map((appointment) => ({
+      user: appointment.user,
+      job: appointment.job,
+    }));
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const getAppointmentByUser = async (request, response) => {
   try {
     const { id } = request.params;
@@ -211,6 +232,7 @@ const countBriefing = async (req, res) => {
 module.exports = {
   getAppointments,
   getAppointment,
+  getHiredApplicants,
   getAppointmentByUser,
   addAppointment,
   updateAppointment,

@@ -134,6 +134,12 @@ const updateUser = async (request, response) => {
         duplicates: duplicateFields,
       });
 
+    // If the password is being updated, hash it before updating the user
+    if (updatedFields.password) {
+      const salt = await bcrypt.genSalt();
+      updatedFields.password = await bcrypt.hash(updatedFields.password, salt);
+    }
+
     const user = await UserModel.findByIdAndUpdate(id, updatedFields, {
       new: true,
       runValidators: true,

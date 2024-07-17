@@ -1,26 +1,24 @@
-// UNFINISHED
 const mongoose = require("mongoose");
 
 const chatSchema = new mongoose.Schema(
   {
-    user: [
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+    },
+    collaborator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Collaborators",
+      required: true,
+      index: false,
+    },
+    message: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
-        required: true,
-      },
-    ],
-    messages: [
-      {
-        sender: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Users",
-          required: true,
-        },
         details: {
           type: [
             {
-              type: { type: String, enum: ["message", "image", "url"] },
+              type: { type: String, enum: ["text", "image", "file", "url"] },
               content: String,
             },
           ],
@@ -32,19 +30,14 @@ const chatSchema = new mongoose.Schema(
         },
       },
     ],
-    collaborator: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Collaborators",
-      required: true,
-      unique: true,
-    },
   },
   {
     timestamps: true,
   }
 );
 
-// Create and export the Chat model
+chatSchema.index({ collaborator: 1 }, { unique: false });
+
 const ChatModel = mongoose.model("Chat", chatSchema);
 
 module.exports = ChatModel;

@@ -11,10 +11,12 @@ const {
   countAwaiting,
   countInitial,
   countFinal,
+  getHiredApplicants,
   countBriefing,
 } = require("../controllers/appointmentController");
 
 router.get("/appointments", getAppointments);
+router.get("/applicants", getHiredApplicants);
 router.get("/appointment/:id", getAppointment);
 router.get("/view-appointments/:id", getAppointmentByUser);
 router.delete("/appointments", deleteAllAppointments);

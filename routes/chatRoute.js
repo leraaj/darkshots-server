@@ -1,18 +1,21 @@
 const express = require("express");
-const router = express.Router();
 const {
   getChats,
   getChat,
+  getChatsByCollaboratorId,
   addChat,
   updateChat,
   deleteChat,
 } = require("../controllers/chatController");
 
+const router = express.Router();
+
 router.get("/chats", getChats);
-router.post("/chat", addChat);
-router.delete("/chat/:id", deleteChat);
 router.get("/chat/:id", getChat);
+router.get("/chats/collaborator/:id", getChatsByCollaboratorId); // New route
+// POST route to add a new chat
+router.post("/chat", addChat);
 router.put("/chat/:id", updateChat);
-// router.use(requireAuth);
+router.delete("chat/:id", deleteChat);
 
 module.exports = router;
