@@ -26,6 +26,7 @@ const getChatsByCollaboratorId = async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 const addChat = async (req, res) => {
@@ -64,8 +65,39 @@ const addChat = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// Update a chat by ID
-const updateChat = async (req, res) => {
+
+const addChat = async (request, response) => {
+  try {
+    const { messages } = request.body;
+    const chat = new ChatModel({
+      messages,
+    });
+    // Validate the user data
+    await chat.validate();
+    // If validation passes, save the user
+    const sentChat = await chat.save();
+    return response.status(201).json(sentChat);
+  } catch (error) {
+    // const validationErrors = {};
+    // if (error.name === "ValidationError") {
+    //   // Validation error occurred
+    //   if (error.errors && Object.keys(error.errors).length > 0) {
+    //     // Extract and send specific validation error messages
+    //     for (const field in error.errors) {
+    //       validationErrors[field] = error.errors[field].message;
+    //     }
+    //   }
+    //   response.status(400).json({ errors: validationErrors });
+    // } else {
+    //   // Other types of errors (e.g., server error)
+    //   console.error(error.message);
+    //   response.status(500).json({ message: "Internal Server Error" });
+    // }
+    response.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const updateChat = async (request, response) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
@@ -84,12 +116,19 @@ const updateChat = async (req, res) => {
 
     res.status(200).json(updatedChat);
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    // if (error.code === 11000 || error.code === 11001) {
+    //   // Handle duplicate field error here
+    //   return response.status(400).json({
+    //     message: "Duplicate field value. This value already exists.",
+    //     field: error.keyValue, // The duplicate field and value
+    //   });
+    // }
+    // Other validation or save errors
+    response.status(500).json({ message: error.message, status: error.status });
   }
 };
-// Delete a chat by ID
-const deleteChat = async (req, res) => {
+
+const deleteChat = async (request, response) => {
   try {
     const { id } = req.params;
     const deletedChat = await ChatModel.findByIdAndDelete(id);
@@ -99,25 +138,15 @@ const deleteChat = async (req, res) => {
         .status(404)
         .json({ message: `Cannot find chat with ID: ${id}` });
     }
-
-    res.status(200).json(deletedChat);
+    response.status(200).json(deletedChat);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-const deleteAllChat = async (request, response) => {
-  try {
-    await ChatModel.deleteMany({});
-    response.status(200).json({ message: "All chats deleted successfully." });
-  } catch (error) {
-    console.error(error.message);
-    response.status(500).json({ message: "Internal Server Error" });
-  }
-};
 module.exports = {
-  getChatsByCollaboratorId,
+  getChats,
+  getChat,
   addChat,
   updateChat,
   deleteChat,

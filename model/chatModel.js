@@ -19,6 +19,7 @@ const chatSchema = new mongoose.Schema(
           type: [
             {
               type: { type: String, enum: ["text", "image", "file", "url"] },
+              type: { type: String, enum: ["text", "image", "file", "url"] },
               content: String,
             },
           ],
@@ -35,6 +36,8 @@ const chatSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+chatSchema.index({ collaborator: 1 }, { unique: false });
 
 chatSchema.index({ collaborator: 1 }, { unique: false });
 

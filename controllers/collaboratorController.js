@@ -134,12 +134,17 @@ const getCollaborators = async (request, response) => {
   }
 };
 
+module.exports = getCollaborators;
+
 const getCollaborator = async (request, response) => {
   try {
     const { id } = request.params;
     const collaborator = await CollaboratorModel.find({ users: id })
       .populate("users", "_id fullName")
+    const collaborator = await CollaboratorModel.find({ users: id })
+      .populate("users", "_id fullName")
       .populate("job", "_id title details")
+      .select("job users status createdAt updatedAt");
       .select("job users status createdAt updatedAt");
     if (!collaborator) {
       return response
@@ -171,12 +176,33 @@ const addCollaborator = async (request, response) => {
       });
     }
 
+    const { title, client, users, job } = request.body; // Expecting users to be an array
+    if (!Array.isArray(users) || users.length === 0) {
+      return response.status(400).json({
+        message: "Invalid input: users should be a non-empty array",
+      });
+    }
+
+    // Check if title is unique
+    const existingCollaborator = await CollaboratorModel.findOne({ title });
+    if (existingCollaborator) {
+      return response.status(400).json({
+        message: "Title already exists. Please choose a unique title.",
+      });
+    }
+
     const collaborator = new CollaboratorModel({
       title,
       client,
       job,
       users,
+      title,
+      client,
+      job,
+      users,
     });
+
+    // Validate and save the collaborator
 
     // Validate and save the collaborator
     await collaborator.validate();
@@ -192,21 +218,27 @@ const updateCollaborator = async (request, response) => {
     const { id } = request.params;
     const { job, users } = request.body;
     const updatedCollaborator = await CollaboratorModel.findByIdAndUpdate(
+    const { job, users } = request.body;
+    const updatedCollaborator = await CollaboratorModel.findByIdAndUpdate(
       id,
+      { job, users },
       { job, users },
       { new: true }
     );
 
+    if (!updatedCollaborator) {
     if (!updatedCollaborator) {
       return response
         .status(404)
         .json({ message: `Cannot find any collaborator with ID: ${id}` });
     }
     response.status(200).json({ updatedCollaborator });
+    response.status(200).json({ updatedCollaborator });
   } catch (error) {
     if (error.code === 11000 || error.code === 11001) {
       return response.status(400).json({
         message: "Duplicate field value. This value already exists.",
+        field: error.keyValue,
         field: error.keyValue,
       });
     }
@@ -248,5 +280,6 @@ module.exports = {
   addCollaborator,
   updateCollaborator,
   deleteCollaborator,
+  deleteAllCollaborators,
   deleteAllCollaborators,
 };
