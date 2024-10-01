@@ -3,7 +3,6 @@ const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const os = require("os");
 const path = require("path");
-const API_KEY = "/etc/secrets/API_KEY";
 const auth = new GoogleAuth({
   scopes: process.env.GOOGLE_SCOPES,
   keyFile: process.env.API_KEY,
