@@ -1,7 +1,6 @@
 const ChatModel = require("../model/chatModel");
 const UserModel = require("../model/userModel");
 const CollaboratorModel = require("../model/collaboratorModel");
-const { uploadFileToDrive } = require("./googleDriveApi");
 
 // Get chats by collaborator ID
 const getChatsByCollaboratorId = async (req, res) => {
@@ -14,7 +13,6 @@ const getChatsByCollaboratorId = async (req, res) => {
       })
       .populate("collaborator", "_id")
       .select("_id sender message collaborator createdAt updatedAt");
-
     // Sort the messages by timestamp within each chat document
     chats.forEach((chat) => {
       chat.message.sort(
@@ -25,7 +23,6 @@ const getChatsByCollaboratorId = async (req, res) => {
     res.status(200).json(chats);
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ message: "Internal Server Error" });
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -65,39 +62,8 @@ const addChat = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-const addChat = async (request, response) => {
-  try {
-    const { messages } = request.body;
-    const chat = new ChatModel({
-      messages,
-    });
-    // Validate the user data
-    await chat.validate();
-    // If validation passes, save the user
-    const sentChat = await chat.save();
-    return response.status(201).json(sentChat);
-  } catch (error) {
-    // const validationErrors = {};
-    // if (error.name === "ValidationError") {
-    //   // Validation error occurred
-    //   if (error.errors && Object.keys(error.errors).length > 0) {
-    //     // Extract and send specific validation error messages
-    //     for (const field in error.errors) {
-    //       validationErrors[field] = error.errors[field].message;
-    //     }
-    //   }
-    //   response.status(400).json({ errors: validationErrors });
-    // } else {
-    //   // Other types of errors (e.g., server error)
-    //   console.error(error.message);
-    //   response.status(500).json({ message: "Internal Server Error" });
-    // }
-    response.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-const updateChat = async (request, response) => {
+// Update a chat by ID
+const updateChat = async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
@@ -116,19 +82,12 @@ const updateChat = async (request, response) => {
 
     res.status(200).json(updatedChat);
   } catch (error) {
-    // if (error.code === 11000 || error.code === 11001) {
-    //   // Handle duplicate field error here
-    //   return response.status(400).json({
-    //     message: "Duplicate field value. This value already exists.",
-    //     field: error.keyValue, // The duplicate field and value
-    //   });
-    // }
-    // Other validation or save errors
-    response.status(500).json({ message: error.message, status: error.status });
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-const deleteChat = async (request, response) => {
+// Delete a chat by ID
+const deleteChat = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedChat = await ChatModel.findByIdAndDelete(id);
@@ -138,15 +97,26 @@ const deleteChat = async (request, response) => {
         .status(404)
         .json({ message: `Cannot find chat with ID: ${id}` });
     }
-    response.status(200).json(deletedChat);
+
+    res.status(200).json(deletedChat);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+  z;
+};
+
+const deleteAllChat = async (request, response) => {
+  try {
+    await ChatModel.deleteMany({});
+    response.status(200).json({ message: "All chats deleted successfully." });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 module.exports = {
-  getChats,
-  getChat,
+  getChatsByCollaboratorId,
   addChat,
   updateChat,
   deleteChat,

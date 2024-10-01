@@ -9,8 +9,6 @@ const {
 
 const router = express.Router();
 
-const router = express.Router();
-
 router.get("/chats/collaborator/:id", getChatsByCollaboratorId); // Get Chats by id
 // POST route to add a new chat
 router.post("/chat", addChat);

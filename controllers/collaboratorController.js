@@ -1,276 +1,176 @@
-const { request } = require("express");
+const { request, response } = require("express");
 const CollaboratorModel = require("../model/collaboratorModel");
 const UserModel = require("../model/userModel");
 const ChatModel = require("../model/chatModel");
 
-const getCollaborators = async (request, response) => {
-  const { id } = request.params;
+// Function to fetch collaborators based on user position
+const getCollaborators = async (req, res) => {
+  const { id } = req.params;
 
   try {
-    // Find the user and check their position
     const user = await UserModel.findById(id).select("position");
     if (!user) {
-      return response.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    let collaborators, chatPromises, chat, latestChat;
-    switch (user?.position) {
-      case 1: // ADMIN
-        // Fetch all collaborators with populated fields
-        collaborators = await CollaboratorModel.find({})
-          .populate("users", "_id fullName")
-          .populate("job", "_id title details")
-          .select("job users client title status createdAt updatedAt");
+    const collaborators = await CollaboratorModel.find({})
+      .populate("users", "_id fullName")
+      .populate("job", "_id title details")
+      .select("job users client title status createdAt updatedAt");
 
-        // Fetch the latest chat for each collaborator
-        chatPromises = collaborators.map(async (collaborator) => {
-          latestChat = await ChatModel.findOne({
-            collaborator: collaborator._id,
-          })
-            .sort({ "message.timestamp": -1 }) // Sort by latest message timestamp
-            .populate("sender", "_id fullName") // Populate sender details
-            .select("message.timestamp");
+    // Fetch the latest chat for each collaborator
+    const chatPromises = collaborators.map(async (collaborator) => {
+      const latestChat = await ChatModel.findOne({
+        collaborator: collaborator._id,
+      })
+        .sort({ "message.timestamp": -1 })
+        .populate("sender", "_id fullName")
+        .select("message.timestamp");
 
-          return {
-            collaborator,
-            latestChat: latestChat ? latestChat.message[0] : null, // Get the most recent message
-          };
-        });
-        chats = await Promise.all(chatPromises);
-        // Combine collaborators and their latest chat messages
-        collaborators = collaborators.map((collab) => {
-          chat = chats.find(
-            (c) => c.collaborator._id.toString() === collab._id.toString()
-          );
-          return {
-            ...collab.toObject(),
-            latestChat: chat ? chat.latestChat : null,
-          };
-        });
-        // Sort collaborators by latest chat timestamp (from most recent to oldest)
-        collaborators.sort((a, b) => {
-          const timestampA = a.latestChat?.timestamp || 0;
-          const timestampB = b.latestChat?.timestamp || 0;
-          return timestampB - timestampA;
-        });
-        break;
+      return {
+        collaborator,
+        latestChat: latestChat ? latestChat.message[0] : null,
+      };
+    });
 
-      case 2: // CLIENT
-        // Fetch all collaborators with populated fields
-        collaborators = await CollaboratorModel.find({})
-          .populate("users", "_id fullName")
-          .populate("job", "_id title details")
-          .select("job users client title status createdAt updatedAt");
+    const chats = await Promise.all(chatPromises);
 
-        // Fetch the latest chat for each collaborator
-        chatPromises = collaborators.map(async (collaborator) => {
-          latestChat = await ChatModel.findOne({
-            collaborator: collaborator._id,
-          })
-            .sort({ "message.timestamp": -1 }) // Sort by latest message timestamp
-            .populate("sender", "_id fullName") // Populate sender details
-            .select("message.timestamp");
+    // Combine collaborators and their latest chat messages
+    const combinedCollaborators = collaborators.map((collab) => {
+      const chat = chats.find(
+        (c) => c.collaborator._id.toString() === collab._id.toString()
+      );
+      return {
+        ...collab.toObject(),
+        latestChat: chat ? chat.latestChat : null,
+      };
+    });
 
-          return {
-            collaborator,
-            latestChat: latestChat ? latestChat.message[0] : null, // Get the most recent message
-          };
-        });
-        chats = await Promise.all(chatPromises);
-        // Combine collaborators and their latest chat messages
-        collaborators = collaborators.map((collab) => {
-          chat = chats.find(
-            (c) => c.collaborator._id.toString() === collab._id.toString()
-          );
-          return {
-            ...collab.toObject(),
-            latestChat: chat ? chat.latestChat : null,
-          };
-        });
-        break;
+    // Sort collaborators by latest chat timestamp (from most recent to oldest)
+    combinedCollaborators.sort((a, b) => {
+      const timestampA = a.latestChat?.timestamp || 0;
+      const timestampB = b.latestChat?.timestamp || 0;
+      return timestampB - timestampA;
+    });
 
-      case 3: // EMPLOYEE
-        // Fetch all collaborators with populated fields
-        collaborators = await CollaboratorModel.find({})
-          .populate("users", "_id fullName")
-          .populate("job", "_id title details")
-          .select("job users client title status createdAt updatedAt");
-
-        // Fetch the latest chat for each collaborator
-        chatPromises = collaborators.map(async (collaborator) => {
-          latestChat = await ChatModel.findOne({
-            collaborator: collaborator._id,
-          })
-            .sort({ "message.timestamp": -1 }) // Sort by latest message timestamp
-            .populate("sender", "_id fullName") // Populate sender details
-            .select("message.timestamp");
-
-          return {
-            collaborator,
-            latestChat: latestChat ? latestChat.message[0] : null, // Get the most recent message
-          };
-        });
-        chats = await Promise.all(chatPromises);
-        // Combine collaborators and their latest chat messages
-        collaborators = collaborators.map((collab) => {
-          chat = chats.find(
-            (c) => c.collaborator._id.toString() === collab._id.toString()
-          );
-          return {
-            ...collab.toObject(),
-            latestChat: chat ? chat.latestChat : null,
-          };
-        });
-        break;
-
-      default:
-        return response.status(400).json({ error: "Invalid user position" });
-    }
-
-    response.status(200).json(collaborators);
+    res.status(200).json(combinedCollaborators);
   } catch (error) {
     console.error("Error fetching collaborators:", error);
-    response.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-module.exports = getCollaborators;
-
-const getCollaborator = async (request, response) => {
+// Function to get a specific collaborator
+const getCollaborator = async (req, res) => {
   try {
-    const { id } = request.params;
-    const collaborator = await CollaboratorModel.find({ users: id })
-      .populate("users", "_id fullName")
+    const { id } = req.params;
     const collaborator = await CollaboratorModel.find({ users: id })
       .populate("users", "_id fullName")
       .populate("job", "_id title details")
       .select("job users status createdAt updatedAt");
-      .select("job users status createdAt updatedAt");
-    if (!collaborator) {
-      return response
+
+    if (!collaborator || collaborator.length === 0) {
+      return res
         .status(404)
         .json({ message: `Cannot find any collaborator with ID: ${id}` });
     }
 
-    response.status(200).json(collaborator);
+    res.status(200).json(collaborator);
   } catch (error) {
     console.error(error.message);
-    response.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const addCollaborator = async (request, response) => {
+// Function to add a new collaborator
+const addCollaborator = async (req, res) => {
   try {
-    const { title, client, users, job } = request.body; // Expecting users to be an array
+    const { title, client, users, job } = req.body; // Expecting users to be an array
     if (!Array.isArray(users) || users.length === 0) {
-      return response.status(400).json({
-        message: "Invalid input: users should be a non-empty array",
-      });
+      return res
+        .status(400)
+        .json({ message: "Invalid input: users should be a non-empty array" });
     }
 
-    // Check if title is unique
     const existingCollaborator = await CollaboratorModel.findOne({ title });
     if (existingCollaborator) {
-      return response.status(400).json({
-        message: "Title already exists. Please choose a unique title.",
-      });
+      return res
+        .status(400)
+        .json({
+          message: "Title already exists. Please choose a unique title.",
+        });
     }
 
-    const { title, client, users, job } = request.body; // Expecting users to be an array
-    if (!Array.isArray(users) || users.length === 0) {
-      return response.status(400).json({
-        message: "Invalid input: users should be a non-empty array",
-      });
-    }
-
-    // Check if title is unique
-    const existingCollaborator = await CollaboratorModel.findOne({ title });
-    if (existingCollaborator) {
-      return response.status(400).json({
-        message: "Title already exists. Please choose a unique title.",
-      });
-    }
-
-    const collaborator = new CollaboratorModel({
-      title,
-      client,
-      job,
-      users,
-      title,
-      client,
-      job,
-      users,
-    });
-
-    // Validate and save the collaborator
+    const collaborator = new CollaboratorModel({ title, client, job, users });
 
     // Validate and save the collaborator
     await collaborator.validate();
     const addedCollaborator = await collaborator.save();
-    return response.status(201).json(addedCollaborator);
+    return res.status(201).json(addedCollaborator);
   } catch (error) {
-    response.status(500).json({ message: "Internal Server Error" });
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const updateCollaborator = async (request, response) => {
+// Function to update an existing collaborator
+const updateCollaborator = async (req, res) => {
   try {
-    const { id } = request.params;
-    const { job, users } = request.body;
-    const updatedCollaborator = await CollaboratorModel.findByIdAndUpdate(
-    const { job, users } = request.body;
+    const { id } = req.params;
+    const { job, users } = req.body;
+
     const updatedCollaborator = await CollaboratorModel.findByIdAndUpdate(
       id,
-      { job, users },
       { job, users },
       { new: true }
     );
 
     if (!updatedCollaborator) {
-    if (!updatedCollaborator) {
-      return response
+      return res
         .status(404)
         .json({ message: `Cannot find any collaborator with ID: ${id}` });
     }
-    response.status(200).json({ updatedCollaborator });
-    response.status(200).json({ updatedCollaborator });
+
+    res.status(200).json({ updatedCollaborator });
   } catch (error) {
-    if (error.code === 11000 || error.code === 11001) {
-      return response.status(400).json({
+    if (error.code === 11000) {
+      return res.status(400).json({
         message: "Duplicate field value. This value already exists.",
-        field: error.keyValue,
         field: error.keyValue,
       });
     }
-    response.status(500).json({ message: error.message, status: error.status });
+    console.error(error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const deleteCollaborator = async (request, response) => {
+// Function to delete a collaborator
+const deleteCollaborator = async (req, res) => {
   try {
-    const { id } = request.params;
+    const { id } = req.params;
     const deletedCollaborator = await CollaboratorModel.findByIdAndDelete(id);
     if (!deletedCollaborator) {
-      return response
+      return res
         .status(404)
         .json({ message: `Cannot find any collaborator with ID: ${id}` });
     }
-    response.status(200).json(deletedCollaborator);
+    res.status(200).json(deletedCollaborator);
   } catch (error) {
     console.error(error.message);
-    response.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-const deleteAllCollaborators = async (request, response) => {
+// Function to delete all collaborators
+const deleteAllCollaborators = async (req, res) => {
   try {
     await CollaboratorModel.deleteMany({});
-    response
+    res
       .status(200)
       .json({ message: "All collaborators deleted successfully." });
   } catch (error) {
     console.error(error.message);
-    response.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -280,6 +180,5 @@ module.exports = {
   addCollaborator,
   updateCollaborator,
   deleteCollaborator,
-  deleteAllCollaborators,
   deleteAllCollaborators,
 };
