@@ -3,7 +3,7 @@ const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const os = require("os");
 const path = require("path");
-
+const API_KEY = "/etc/secrets/API_KEY";
 const auth = new GoogleAuth({
   scopes: process.env.GOOGLE_SCOPES,
   keyFile: process.env.API_KEY,
@@ -15,7 +15,7 @@ async function createFolder() {
   const fileMetadata = {
     name: "Invoices",
     mimeType: "application/vnd.google-apps.folder",
-    parents: ["1RUrxWoJmcCsu2axjyJgUarRCxOjSemZE"],
+    parents: [process.env.FILE_ROOT_DIRECTORY],
   };
 
   try {
@@ -33,7 +33,7 @@ async function createFolder() {
       requestBody: {
         role: "writer", // or "reader", depending on your desired access level
         type: "user",
-        emailAddress: "leraalfredojohn@gmail.com", // Replace with your personal email
+        emailAddress: process.env.COMPANY_EMAIL, // Replace with your personal email
       },
     });
 
@@ -66,8 +66,8 @@ async function uploadFile() {
     parents: ["1rV-UZAChd6QcULcs8l-zSpwXDFI29Nmx"], // "collaborator._id"
   };
   const media = {
-    mimeType: "image/png", //File mime type
-    body: fs.createReadStream("1.png"), //File directory
+    mimeType: "text/plain", //File mime type
+    body: fs.createReadStream("test.txt"), //File directory
   };
   try {
     const file = await service.files.create({
