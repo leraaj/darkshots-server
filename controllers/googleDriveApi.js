@@ -4,16 +4,22 @@ const { google } = require("googleapis");
 const os = require("os");
 const path = require("path");
 
-const apiKeyFile = process.env.RENDER_GOOGLE_API_KEY; //SERVER
+const apiKeyFile =
+  // process.env.RENDER_GOOGLE_API_KEY //SERVER
 
-if (!apiKeyFile) {
+  process.env.LOCAL_API_KEY; //LOCAL
+const key = fs.existsSync(process.env.RENDER_GOOGLE_API_KEY)
+  ? process.env.RENDER_GOOGLE_API_KEY
+  : process.env.LOCAL_API_KEY;
+console.log(key);
+if (!key) {
   throw new Error(
     "API key file is missing. Please set API_KEY, secrets.API_KEY, or RENDER_GOOGLE_API_KEY."
   );
 }
 const auth = new GoogleAuth({
   scopes: process.env.GOOGLE_SCOPES,
-  keyFile: apiKeyFile,
+  keyFile: key,
   subject: process.env.COMPANY_EMAIL, // Replace with your personal Google account email
 });
 
