@@ -3,9 +3,10 @@ const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const os = require("os");
 const path = require("path");
+const RENDER_GOOGLE_API_KEY = "/etc/secrets/API_KEY";
 const auth = new GoogleAuth({
   scopes: process.env.GOOGLE_SCOPES,
-  keyFile: process.env.API_KEY,
+  keyFile: process.env.API_KEY || secrets.API_KEY || RENDER_GOOGLE_API_KEY,
   subject: process.env.COMPANY_EMAIL, // Replace with your personal Google account email
 });
 
