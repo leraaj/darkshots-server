@@ -5,7 +5,7 @@ const os = require("os");
 const path = require("path");
 const RENDER_GOOGLE_API_KEY = "/etc/secrets/API_KEY";
 
-const apiKeyFile = secrets.API_KEY || RENDER_GOOGLE_API_KEY;
+const apiKeyFile = RENDER_GOOGLE_API_KEY;
 
 if (!apiKeyFile) {
   throw new Error(
