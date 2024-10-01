@@ -1,5 +1,5 @@
-const ApplicationModel = require("../model/applicationModel");
-const AppointmentModel = require("../model/appointmentModel");
+const ApplicationModel = require("./model/applicationModel");
+const AppointmentModel = require("./model/appointmentModel");
 
 const getApplications = async (request, response) => {
   try {

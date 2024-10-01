@@ -1,17 +1,29 @@
-// UNFINISHED
 const mongoose = require("mongoose");
+
 const collaboratorSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    client: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+    },
     job: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Jobs",
       required: true,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
-    },
+    users: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Users",
+        required: true,
+      },
+    ],
   },
   {
     timestamps: true,
@@ -41,5 +53,5 @@ collaboratorSchema.post("findOneAndUpdate", function (doc, next) {
   next();
 });
 
-const CollaboratorModel = mongoose.model("Collaborators", collaboratorSchema);
+const CollaboratorModel = mongoose.model("Collaborator", collaboratorSchema);
 module.exports = CollaboratorModel;

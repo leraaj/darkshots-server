@@ -6,13 +6,15 @@ const {
   addCollaborator,
   updateCollaborator,
   deleteCollaborator,
+  deleteAllCollaborators,
 } = require("../controllers/collaboratorController");
 
-router.get("/collaborators", getCollaborators);
+router.get("/collaborators/:id", getCollaborators);
 router.post("/collaborator", addCollaborator);
-router.delete("/collaborator/:id", deleteCollaborator);
 router.get("/collaborator/:id", getCollaborator);
 router.put("/collaborator/:id", updateCollaborator);
+router.delete("/collaborator/:id", deleteCollaborator);
+router.delete("/collaborators", deleteAllCollaborators);
 // router.use(requireAuth);
 
 module.exports = router;
