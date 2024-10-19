@@ -38,12 +38,10 @@ app.use(cookieParser());
 app.use(
   cors({
     credentials: true,
-    origin: [APP, RENDER, "http://localhost:3000"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: [BASE, APP, RENDER, "*"],
   })
 );
+
 // ROUTES
 app.use("/api", userRoute);
 app.use("/api", jobRoute);
@@ -56,7 +54,7 @@ app.use("/api", chatRoute);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [APP, RENDER],
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true,
   },
