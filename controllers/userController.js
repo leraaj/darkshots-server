@@ -231,26 +231,25 @@ const currentUser = async (request, response) => {
   try {
     const token = request.cookies.Auth_Token;
 
+    if (!token) {
+      return response.status(401).json({ message: "No token provided" });
+    }
+
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return response.status(401).json({
           message: "Invalid token",
-          token: `token:${token}`,
         });
       }
 
-      try {
-        const userId = decoded.id;
-        const user = await UserModel.findOne({ _id: userId });
+      const userId = decoded.id;
+      const user = await UserModel.findById(userId);
 
-        if (!user) {
-          return response.status(404).json({ message: "User not found" });
-        }
-        response.status(200).json({ user, token });
-      } catch (error) {
-        console.error("Error in currentUser:", error.message);
-        response.status(500).json({ message: error.message });
+      if (!user) {
+        return response.status(404).json({ message: "User not found" });
       }
+
+      response.status(200).json({ user, token });
     });
   } catch (error) {
     console.error("Error in currentUser:", error.message);
@@ -261,28 +260,28 @@ const currentUser = async (request, response) => {
 const currentUserMobile = async (request, response) => {
   try {
     const authHeader = request.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return response
+        .status(401)
+        .json({ message: "Authorization header missing or malformed" });
+    }
+
     const token = authHeader.split(" ")[1];
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
-        return response.status(401).json({
-          message: "Invalid token",
-          token: `token: ${token}`,
-        });
+        return response.status(401).json({ message: "Invalid token" });
       }
 
-      try {
-        const userId = decoded.id;
-        const user = await UserModel.findOne({ _id: userId });
+      const userId = decoded.id;
+      const user = await UserModel.findById(userId);
 
-        if (!user) {
-          return response.status(404).json({ message: "User not found" });
-        }
-        response.status(200).json({ user, token });
-      } catch (error) {
-        console.error("Error in currentUserMobile:", error.message);
-        response.status(500).json({ message: error.message });
+      if (!user) {
+        return response.status(404).json({ message: "User not found" });
       }
+
+      response.status(200).json({ user, token });
     });
   } catch (error) {
     console.error("Error in currentUserMobile:", error.message);
