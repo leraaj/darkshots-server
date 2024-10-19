@@ -72,7 +72,6 @@ const getUsers = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const getUser = async (request, response) => {
   try {
     const { id } = request.params;
@@ -83,7 +82,6 @@ const getUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const addUser = async (request, response) => {
   try {
     const addFields = request.body;
@@ -112,7 +110,6 @@ const addUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const updateUser = async (request, response) => {
   try {
     const { id } = request.params;
@@ -156,7 +153,6 @@ const updateUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
-
 const deleteUser = async (request, response) => {
   try {
     const { id } = request.params;

@@ -28,4 +28,5 @@ router.get("/countWaiting/:id", countAwaiting);
 router.get("/countInitial/:id", countInitial);
 router.get("/countFinal/:id", countFinal);
 router.get("/countBriefing/:id", countBriefing);
+
 module.exports = router;

@@ -15,16 +15,8 @@ const chatSchema = new mongoose.Schema(
     },
     message: [
       {
-        details: {
-          type: [
-            {
-              type: { type: String, enum: ["text", "image", "file", "url"] },
-              type: { type: String, enum: ["text", "image", "file", "url"] },
-              content: String,
-            },
-          ],
-          required: true,
-        },
+        type: { type: String, enum: ["text", "file"], required: true }, // Updated here
+        content: { type: String, required: true }, // Ensure content is required
         timestamp: {
           type: Date,
           default: Date.now,
@@ -36,8 +28,6 @@ const chatSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-chatSchema.index({ collaborator: 1 }, { unique: false });
 
 chatSchema.index({ collaborator: 1 }, { unique: false });
 

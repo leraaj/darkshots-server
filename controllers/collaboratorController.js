@@ -6,17 +6,41 @@ const ChatModel = require("../model/chatModel");
 // Function to fetch collaborators based on user position
 const getCollaborators = async (req, res) => {
   const { id } = req.params;
+  if (!id) {
+    console.error("Cannot fetch collaborators: User ID is undefined.");
+    return res.status(400).json({ error: "User ID is required" });
+  }
 
   try {
-    const user = await UserModel.findById(id).select("position");
+    const user = await UserModel.findById(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const collaborators = await CollaboratorModel.find({})
-      .populate("users", "_id fullName")
-      .populate("job", "_id title details")
-      .select("job users client title status createdAt updatedAt");
+    let collaborators;
+
+    // If the user is an admin, fetch all collaborators
+    if (user.position === 1) {
+      collaborators = await CollaboratorModel.find({})
+        .populate("users", "_id fullName")
+        .populate("job", "_id title details")
+        .select("job users client title status createdAt updatedAt");
+    } else if (user.position === 2) {
+      collaborators = await CollaboratorModel.find({
+        client: id, // Filter by the user's ID
+      })
+        .populate("users", "_id fullName")
+        .populate("job", "_id title details")
+        .select("job users client title status createdAt updatedAt");
+    } else {
+      // Otherwise, fetch only the collaborators the user is involved in
+      collaborators = await CollaboratorModel.find({
+        users: id, // Filter by the user's ID
+      })
+        .populate("users", "_id fullName")
+        .populate("job", "_id title details")
+        .select("job users client title status createdAt updatedAt");
+    }
 
     // Fetch the latest chat for each collaborator
     const chatPromises = collaborators.map(async (collaborator) => {
@@ -26,10 +50,16 @@ const getCollaborators = async (req, res) => {
         .sort({ "message.timestamp": -1 })
         .populate("sender", "_id fullName")
         .select("message.timestamp");
-
+      const lastChat = await ChatModel.findOne({
+        collaborator: collaborator._id,
+      })
+        .sort({ "message.timestamp": -1 })
+        .populate("sender", "_id fullName")
+        .select("message");
       return {
         collaborator,
         latestChat: latestChat ? latestChat.message[0] : null,
+        lastChat: lastChat,
       };
     });
 
@@ -43,6 +73,7 @@ const getCollaborators = async (req, res) => {
       return {
         ...collab.toObject(),
         latestChat: chat ? chat.latestChat : null,
+        lastChat: chat ? chat.lastChat : null,
       };
     });
 
@@ -94,11 +125,9 @@ const addCollaborator = async (req, res) => {
 
     const existingCollaborator = await CollaboratorModel.findOne({ title });
     if (existingCollaborator) {
-      return res
-        .status(400)
-        .json({
-          message: "Title already exists. Please choose a unique title.",
-        });
+      return res.status(400).json({
+        message: "Title already exists. Please choose a unique title.",
+      });
     }
 
     const collaborator = new CollaboratorModel({ title, client, job, users });

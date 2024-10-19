@@ -1,102 +1,62 @@
 const fs = require("fs");
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
-const os = require("os");
 const path = require("path");
+const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 
-const apiKeyFile =
-  // process.env.RENDER_GOOGLE_API_KEY //SERVER
-
-  process.env.LOCAL_API_KEY; //LOCAL
-const key = fs.existsSync(process.env.RENDER_GOOGLE_API_KEY)
-  ? process.env.RENDER_GOOGLE_API_KEY
-  : process.env.LOCAL_API_KEY;
-console.log(key);
-if (!key) {
-  throw new Error(
-    "API key file is missing. Please set API_KEY, secrets.API_KEY, or RENDER_GOOGLE_API_KEY."
-  );
-}
-const auth = new GoogleAuth({
-  scopes: process.env.GOOGLE_SCOPES,
-  keyFile: key,
-  subject: process.env.COMPANY_EMAIL, // Replace with your personal Google account email
-});
-
-async function createFolder() {
+const createFolder = async (folderName) => {
   const service = google.drive({ version: "v3", auth });
   const fileMetadata = {
-    name: "Invoices",
+    name: folderName,
     mimeType: "application/vnd.google-apps.folder",
     parents: [process.env.FILE_ROOT_DIRECTORY],
   };
-
   try {
-    // Step 1: Create the folder
     const file = await service.files.create({
       requestBody: fileMetadata,
       fields: "id",
     });
     const folderId = file.data.id;
-    console.log("Folder ID:", folderId);
-
-    // Step 2: Share the folder with your personal account
     await service.permissions.create({
       fileId: folderId,
       requestBody: {
-        role: "writer", // or "reader", depending on your desired access level
+        role: "writer",
         type: "user",
-        emailAddress: process.env.COMPANY_EMAIL, // Replace with your personal email
+        emailAddress: process.env.COMPANY_EMAIL,
       },
     });
-
-    console.log("Folder shared with your personal account");
 
     return folderId;
   } catch (error) {
     console.error("Error creating or sharing folder:", error);
     throw error;
   }
-}
+};
+const uploadFile = async (request, response) => {
+  const { name, collaborator_id, mimeType, file } = request.params;
 
-async function uploadFile() {
-  const before_sendFile = {
-    name: "",
-    parents: "",
-    mimeType: "",
-    directory: "",
-  };
-  const after_sendFile = {
-    googleId: "",
-    name: "",
-    mimeType: "",
-    folderId: "parents:[replace_with_actual_id]",
-  };
   const service = google.drive({ version: "v3", auth });
   const requestBody = {
-    name: "lera_test", //Replace with "user._id"_filename.filetype
+    name: `${name}`,
     fields: "id",
-    parents: ["1rV-UZAChd6QcULcs8l-zSpwXDFI29Nmx"], // "collaborator._id"
+    parents: [`${collaborator_id}`], // "collaborator._id"
   };
   const media = {
-    mimeType: "text/plain", //File mime type
-    body: fs.createReadStream("test.txt"), //File directory
+    mimeType: mimeType, //File mime type
+    body: fs.createReadStream(file), //File directory
   };
   try {
     const file = await service.files.create({
       requestBody,
       media: media,
     });
-    console.log("File Id:", file.data.id);
-
     return file.data.id;
   } catch (err) {
-    // TODO(developer) - Handle error
     console.log("Error:", err);
     throw err;
   }
-}
-async function downloadFile(realFileId) {
+};
+const downloadFile = async (realFileId) => {
   const service = google.drive({ version: "v3", auth });
 
   try {
@@ -131,9 +91,8 @@ async function downloadFile(realFileId) {
     console.error("Error:", err);
     throw err;
   }
-}
-
-function getFileExtension(mimeType) {
+};
+const getFileExtension = async (mimeType) => {
   const mimeTypes = {
     "image/jpeg": "jpg",
     "image/png": "png",
@@ -143,10 +102,27 @@ function getFileExtension(mimeType) {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
       "docx",
     "application/zip": "zip",
+    "application/illustrator": "ai",
+    "image/vnd.adobe.photoshop": "psd",
     // Add more MIME types here as needed
   };
 
-  return mimeTypes[mimeType] || "bin"; // Default to 'bin' if no match found
-}
+  return mimeTypes[mimeType]; // Default to 'bin' if no match found
+};
 
 module.exports = { createFolder, uploadFile, downloadFile };
+
+// const folder_structure = {
+//   users: {
+//     names: {
+//       files: [], //resume/CV/portfolio
+//       profile_photo: "", //Profile Picture
+//
+//     },
+//   },
+//   groupFolders: {
+//     group_names: {
+//       files: [], //All kinds of files uploaded within group
+//     },
+//   },
+// };
