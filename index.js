@@ -25,10 +25,12 @@ const {
 } = require("./controllers/googleDriveApi"); //TESTING
 
 // ENV
-const RENDER = process.env.RENDER_URL;
-const BASE = process.env.BASE_URL;
+const RENDER_SERVER = process.env.RENDER_SERVER_URL;
+const LOCAL_WEB = process.env.LOCAL_WEB;
+const LOCAL_SERVER = process.env.LOCAL_SERVER;
+const RENDER_WEB = process.env.RENDER_WEB_URL;
+
 const MONGO_URL = process.env.MONGO_URL;
-const APP = process.env.APP_URL;
 const PORT = process.env.PORT;
 //
 app.use(express.json());
@@ -37,8 +39,10 @@ app.use(cookieParser());
 //
 app.use(
   cors({
-    credentials: true,
-    origin: [BASE, APP, RENDER, "*"],
+    origin: [LOCAL_WEB, RENDER_WEB], // Replace with your frontend URL
+    credentials: true, // Allow credentials (cookies, etc.)
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
+    allowedHeaders: ["Content-Type"], // Allowed headers
   })
 );
 
@@ -54,12 +58,13 @@ app.use("/api", chatRoute);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [BASE, APP, RENDER, "http://localhost:3000"],
+    origin: LOCAL_WEB,
     methods: ["GET", "POST"],
     credentials: true,
+    allowedHeaders: ["Content-Type"], // Allowed headers
   },
 });
-
+console.log(LOCAL_WEB);
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
@@ -74,15 +79,15 @@ io.on("connection", (socket) => {
         `User with ID: ${socket.id} left room: ${socket.currentRoom}`
       );
     }
-
     socket.join(room);
     socket.currentRoom = room;
-    console.log(`User with ID: ${socket.id}, joined room: ${room}`);
+    console.log(`User with ID: ${socket.id} joined room: ${room}`);
+    console.log(`Rooms for user:`, Array.from(socket.rooms)); // Log the rooms
   });
 
   socket.on("send_message", (data) => {
-    console.log(data);
-    socket.to(data?.room).emit("receive_message");
+    console.log(`Group: ${data.title}\nMessage: ${data.message}`);
+    socket.to(data?.room).emit("receive_message", data);
   });
 });
 
