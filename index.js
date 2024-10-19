@@ -68,14 +68,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join_room", (room) => {
-    // Leave the current room if there is one
     if (socket.currentRoom) {
       socket.leave(socket.currentRoom);
       console.log(
         `User with ID: ${socket.id} left room: ${socket.currentRoom}`
       );
     }
-    // Join the new room
+
     socket.join(room);
     socket.currentRoom = room;
     console.log(`User with ID: ${socket.id}, joined room: ${room}`);
