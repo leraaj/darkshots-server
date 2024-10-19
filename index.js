@@ -54,7 +54,7 @@ app.use("/api", chatRoute);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: APP,
+    origin: [BASE, APP, RENDER, "http://localhost:3000"],
     methods: ["GET", "POST"],
     credentials: true,
   },
