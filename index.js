@@ -58,13 +58,12 @@ app.use("/api", chatRoute);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: LOCAL_WEB,
+    origin: [RENDER_WEB, LOCAL_WEB, "*"],
     methods: ["GET", "POST"],
     credentials: true,
     allowedHeaders: ["Content-Type"], // Allowed headers
   },
 });
-console.log(LOCAL_WEB);
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
