@@ -39,7 +39,7 @@ app.use(cookieParser());
 //
 app.use(
   cors({
-    origin: [LOCAL_WEB, RENDER_WEB], // Replace with your frontend URL
+    origin: [RENDER_WEB, LOCAL_WEB, "*"], // Replace with your frontend URL
     credentials: true, // Allow credentials (cookies, etc.)
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
     allowedHeaders: ["Content-Type"], // Allowed headers
