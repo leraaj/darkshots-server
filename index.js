@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const http = require("http");
+require("dotenv").config();
 
 // Import the Socket.IO server initialization
 const { initializeSocketServer } = require("./socket-server");
@@ -15,11 +16,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+const NODE_ENVIRONMENT = process.env.NODE_ENV;
+const WEB_LINK_LOCAL = process.env.WEB_LINK_LOCAL;
+const WEB_LINK_HOSTING = process.env.WEB_LINK_HOSTING;
+const API_URL =
+  NODE_ENVIRONMENT === "development"
+    ? WEB_LINK_LOCAL
+    : NODE_ENVIRONMENT === "production"
+    ? WEB_LINK_HOSTING
+    : "http://localhost:3001";
 
 // CORS configuration for the HTTP routes
 app.use(
   cors({
-    origin: ["https://darkshot-web.onrender.com"], // Update with your front-end URL
+    origin: [API_URL], // Update with your front-end URL
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
@@ -60,6 +70,15 @@ mongoose
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on port: ${PORT}`);
+      console.log(
+        `API: ${
+          process.env.NODE_ENV === "development"
+            ? WEB_LINK_LOCAL
+            : process.env.NODE_ENV === "production"
+            ? WEB_LINK_HOSTING
+            : `${process.env.NODE_ENV} === production`
+        }`
+      );
     });
     console.log("Connected to DB =>");
   })
