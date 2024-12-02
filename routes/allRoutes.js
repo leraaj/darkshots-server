@@ -5,7 +5,7 @@ const applicationRoute = require("./applicationRoute");
 const appointmentRoute = require("./appointmentRoute");
 const collaboratorRoute = require("./collaboratorRoute");
 const chatRoute = require("./chatRoute");
-
+const googleRoute = require("./googleRoute");
 module.exports = {
   userRoute,
   jobRoute,
@@ -14,4 +14,5 @@ module.exports = {
   appointmentRoute,
   collaboratorRoute,
   chatRoute,
+  googleRoute,
 };

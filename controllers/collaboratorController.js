@@ -116,7 +116,8 @@ const getCollaborator = async (req, res) => {
 // Function to add a new collaborator
 const addCollaborator = async (req, res) => {
   try {
-    const { title, client, users, job } = req.body; // Expecting users to be an array
+    const { title, client, users, job, senderId } = req.body; // Expecting users to be an array
+
     if (!Array.isArray(users) || users.length === 0) {
       return res
         .status(400)
@@ -125,22 +126,52 @@ const addCollaborator = async (req, res) => {
 
     const existingCollaborator = await CollaboratorModel.findOne({ title });
     if (existingCollaborator) {
+      console.log(`Existing: ${existingCollaborator}`);
       return res.status(400).json({
         message: "Title already exists. Please choose a unique title.",
       });
     }
 
+    // Create and save the new collaborator
     const collaborator = new CollaboratorModel({ title, client, job, users });
-
-    // Validate and save the collaborator
     await collaborator.validate();
     const addedCollaborator = await collaborator.save();
-    return res.status(201).json(addedCollaborator);
+
+    // Store the new collaborator's ID
+    const collabID = addedCollaborator._id;
+
+    // Send a message announcing the new group's creation
+    const messageContent = `🎉 Welcome to the "${title}" group chat! 🎉`;
+    const newChat = new ChatModel({
+      sender: senderId,
+      collaborator: collabID,
+      message: [{ type: "text", content: messageContent }],
+    });
+
+    // Save the chat
+    const savedChat = await newChat.save();
+
+    return res
+      .status(201)
+      .json({ collaborator: addedCollaborator, chat: savedChat });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+// // Construct the message object using content from the request body
+// const message = {
+//   type: "text", // Use the type from request or default to "text"
+//   content: `${title} has been created`, // Use the content from request
+// };
+
+// // Create a new chat instance
+// const newChat = new ChatModel({
+//   sender: senderId,
+//   collaborator: collaboratorId,
+//   message: [message], // Custom updatedAt date (if needed)
+// });
 
 // Function to update an existing collaborator
 const updateCollaborator = async (req, res) => {

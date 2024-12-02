@@ -23,7 +23,7 @@ const initializeSocketServer = (server) => {
 
   // Handle connection events
   io.on("connection", (socket) => {
-    console.log(`User Connected: ${socket.id}`);
+    // console.log(`User Connected: ${socket.id}`);
 
     socket.on("disconnect", () => {
       console.log(`User Disconnected: ${socket.id}`);
@@ -43,14 +43,13 @@ const initializeSocketServer = (server) => {
 
     socket.on("send_message", (data) => {
       console.log(`Group: ${data.title}\nMessage: ${data.message}`);
-      socket.to(data?.room).emit("receive_message", data);
+      socket.to(data?.room).emit("receive_message");
+      io.emit("refresh_chatlist");
     });
-
-    socket.on("typing", (room) => {
-      socket.to(room).emit("user_typing", { userId: socket.id });
-      console.log(`User with ID: ${socket.id} is typing in room: ${room}`);
+    socket.on("new_collaborator", (data) => {
+      console.log(data.message);
+      io.emit("refresh_chatlist");
     });
-
     socket.on("error", () => {
       console.log("Socket Error");
     });

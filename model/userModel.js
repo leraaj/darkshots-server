@@ -47,12 +47,19 @@ const userSchema = new mongoose.Schema(
       // { value: 3, label: "Accepted" },
       // { value: 4, label: "Rejected" },
     },
-    // loggedIn: {
-    //   type: Number,
-    //   required: [true, "Please select status"],
-    //   // { value: 0 },
-    //   // { value: 1 }, User allowed to logged-in, at least 1
-    // },
+    files: {
+      profile: {
+        id: { type: String },
+        name: { type: String },
+        mimeType: { type: String },
+      },
+      resume: {
+        id: { type: String },
+        name: { type: String },
+        mimeType: { type: String },
+      },
+      // Add portfolio object that can have 2 or more files
+    },
   },
   {
     timestamps: true,

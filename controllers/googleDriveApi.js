@@ -1,21 +1,38 @@
 const fs = require("fs");
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
+const os = require("os");
 const path = require("path");
 const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 
-const createFolder = async (folderName) => {
+const createFolder = async (folderName, parentId) => {
   const service = google.drive({ version: "v3", auth });
-  const fileMetadata = {
-    name: folderName,
-    mimeType: "application/vnd.google-apps.folder",
-    parents: [process.env.FILE_ROOT_DIRECTORY],
-  };
+
+  // Check if folder already exists
   try {
+    const existingFolder = await service.files.list({
+      q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`,
+      fields: "files(id, name)",
+    });
+
+    // If the folder exists, return a message
+    if (existingFolder.data.files.length > 0) {
+      const folder = existingFolder.data.files[0];
+      console.log(`${folderName} folder name in ${parentId} already exists`);
+      return folder.id;
+    }
+
+    // Proceed with creating a new folder if it doesn't exist
+    const fileMetadata = {
+      name: folderName,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentId],
+    };
     const file = await service.files.create({
       requestBody: fileMetadata,
       fields: "id",
     });
+
     const folderId = file.data.id;
     await service.permissions.create({
       fileId: folderId,
@@ -32,25 +49,73 @@ const createFolder = async (folderName) => {
     throw error;
   }
 };
+
+// Function to create a folder inside 'users'
+const createUsersFolder = async (folderName) => {
+  return await createFolder(folderName, process.env.USERS_ROOT_DIRECTORY);
+};
+
+// Function to create a folder inside 'chats'
+const createChatsFolder = async (folderName) => {
+  return await createFolder(folderName, process.env.CHATS_ROOT_DIRECTORY);
+};
+
+const deleteAllFilesAndFolders = async () => {
+  const service = google.drive({ version: "v3", auth });
+
+  try {
+    // List all files and folders in Google Drive
+    const response = await service.files.list({
+      q: `trashed = false`, // Ignore already-trashed files
+      fields: "files(id, name, mimeType)",
+      pageSize: 1000, // Adjust if you have more than 1000 items to ensure all items are listed
+    });
+
+    // Log the items for confirmation
+    console.log("Files to be deleted:", response.data.files);
+
+    // Loop through all files and delete them one by one
+    for (const file of response.data.files) {
+      try {
+        await service.files.delete({ fileId: file.id });
+        console.log(
+          `Deleted: ${file.name} (ID: ${file.id}, Type: ${file.mimeType})`
+        );
+      } catch (deleteError) {
+        console.error(
+          `Failed to delete ${file.name} (ID: ${file.id}):`,
+          deleteError
+        );
+      }
+    }
+
+    console.log("All files and folders deleted.");
+  } catch (error) {
+    console.error("Error fetching files:", error);
+  }
+};
 const uploadFile = async (request, response) => {
   const { name, collaborator_id, mimeType, file } = request.params;
-
   const service = google.drive({ version: "v3", auth });
   const requestBody = {
     name: `${name}`,
+    // name: `TEST`, //TEST
     fields: "id",
-    parents: [`${collaborator_id}`], // "collaborator._id"
+    parents: [`1RUrxWoJmcCsu2axjyJgUarRCxOjSemZE`], //TEST
+    // parents: [`${collaborator_id}`], // "collaborator._id"
   };
   const media = {
     mimeType: mimeType, //File mime type
+    // mimeType: "text/plain", //TEST
     body: fs.createReadStream(file), //File directory
+    // body: fs.createReadStream("test.txt"), //TEST
   };
   try {
     const file = await service.files.create({
       requestBody,
       media: media,
     });
-    return file.data.id;
+    return console.log(`FILE: ${file.data.id}`);
   } catch (err) {
     console.log("Error:", err);
     throw err;
@@ -66,6 +131,7 @@ const downloadFile = async (realFileId) => {
       fields: "name, mimeType", // Request only name and MIME type
     });
 
+    const downloadsFolder = path.join(os.homedir(), "Downloads");
     const fileName = fileMetadata.data.name;
     const mimeType = fileMetadata.data.mimeType;
     const fileType = getFileExtension(mimeType);
@@ -92,7 +158,7 @@ const downloadFile = async (realFileId) => {
     throw err;
   }
 };
-const getFileExtension = async (mimeType) => {
+const getFileExtension = (mimeType) => {
   const mimeTypes = {
     "image/jpeg": "jpg",
     "image/png": "png",
@@ -107,10 +173,18 @@ const getFileExtension = async (mimeType) => {
     // Add more MIME types here as needed
   };
 
-  return mimeTypes[mimeType]; // Default to 'bin' if no match found
+  return mimeTypes[mimeType] || "bin"; // Default to .bin if MIME type not recognized
 };
 
-module.exports = { createFolder, uploadFile, downloadFile };
+module.exports = {
+  createFolder,
+  uploadFile,
+  downloadFile,
+  deleteAllFilesAndFolders,
+  createUsersFolder,
+  createChatsFolder,
+  getFileExtension,
+};
 
 // const folder_structure = {
 //   users: {

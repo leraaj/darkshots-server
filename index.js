@@ -5,13 +5,19 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 require("dotenv").config();
-
+const {
+  uploadFile,
+  downloadFile,
+  deleteAllFilesAndFolders,
+  createUsersFolder,
+  createChatsFolder,
+} = require("./controllers/googleDriveApi");
 // Import the Socket.IO server initialization
 const { initializeSocketServer } = require("./socket-server");
 
 // Initialize express app
 const app = express();
-
+// downloadFile("1q_EIwFkuXGBHVbqjuAZIoRNKscwkVu8-");
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -35,7 +41,7 @@ app.use(
     allowedHeaders: ["Content-Type"],
   })
 );
-
+// deleteAllFilesAndFolders();
 // Import routes
 const {
   userRoute,
@@ -45,6 +51,7 @@ const {
   appointmentRoute,
   collaboratorRoute,
   chatRoute,
+  googleRoute,
 } = require("./routes/allRoutes");
 
 // Route all API requests
@@ -55,6 +62,7 @@ app.use("/api", applicationRoute);
 app.use("/api", appointmentRoute);
 app.use("/api", collaboratorRoute);
 app.use("/api", chatRoute);
+app.use("/api", googleRoute);
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -72,11 +80,11 @@ mongoose
       console.log(`Server is running on port: ${PORT}`);
       console.log(
         `API: ${
-          process.env.NODE_ENV === "development"
-            ? WEB_LINK_LOCAL
-            : process.env.NODE_ENV === "production"
-            ? WEB_LINK_HOSTING
-            : `${process.env.NODE_ENV} === production`
+          NODE_ENVIRONMENT === "development"
+            ? `${WEB_LINK_LOCAL} === development`
+            : NODE_ENVIRONMENT === "production"
+            ? `${WEB_LINK_HOSTING} === production`
+            : `${NODE_ENVIRONMENT} === catch`
         }`
       );
     });

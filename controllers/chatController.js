@@ -11,17 +11,19 @@ const getChatsByCollaboratorId = async (req, res) => {
     const chats = await ChatModel.find({ collaborator: id })
       .populate({
         path: "sender",
-        select: "_id fullName",
+        select: "_id fullName position",
       })
+      .sort({ createdAt: -1 }) // Sort chat documents by createdAt in descending order
       .populate("collaborator", "_id")
-      .select("_id sender message collaborator createdAt updatedAt")
-      .sort({ createdAt: -1 }); // Sort chat documents by createdAt in descending order
+      .select("_id sender message collaborator createdAt updatedAt");
 
-    // Sort the messages by timestamp within each chat document in ascending order
+    // Check and sort messages by timestamp within each chat document in ascending order
     chats.forEach((chat) => {
-      chat.message.sort(
-        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-      );
+      if (Array.isArray(chat.message)) {
+        chat.message.sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+        );
+      }
     });
 
     res.status(200).json(chats);

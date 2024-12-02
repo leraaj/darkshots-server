@@ -1,1 +1,90 @@
 test
+
+// Import necessary modules
+const mongoose = require("mongoose");
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const http = require("http");
+require("dotenv").config();
+
+// Import the Socket.IO server initialization
+const { initializeSocketServer } = require("./socket-server");
+
+// Initialize express app
+const app = express();
+
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+const NODE_ENVIRONMENT = process.env.NODE_ENV;
+const WEB_LINK_LOCAL = process.env.WEB_LINK_LOCAL;
+const WEB_LINK_HOSTING = process.env.WEB_LINK_HOSTING;
+const API_URL =
+  NODE_ENVIRONMENT === "development"
+    ? WEB_LINK_LOCAL
+    : NODE_ENVIRONMENT === "production"
+    ? WEB_LINK_HOSTING
+    : "http://localhost:3001";
+
+// CORS configuration for the HTTP routes
+app.use(
+  cors({
+    origin: [API_URL], // Update with your front-end URL
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+// Import routes
+const {
+  userRoute,
+  jobRoute,
+  categoryRoute,
+  applicationRoute,
+  appointmentRoute,
+  collaboratorRoute,
+  chatRoute,
+} = require("./routes/allRoutes");
+const { uploadFile } = require("./controllers/googleDriveApi");
+
+// Route all API requests
+app.use("/api", userRoute);
+app.use("/api", jobRoute);
+app.use("/api", categoryRoute);
+app.use("/api", applicationRoute);
+app.use("/api", appointmentRoute);
+app.use("/api", collaboratorRoute);
+app.use("/api", chatRoute);
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize the Socket.IO server
+initializeSocketServer(server);
+
+// Database connection and server start
+mongoose.set("strictQuery", false);
+const PORT = process.env.PORT || 3001;
+mongoose
+  .connect(process.env.MONGO_URL)
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server is running on port: ${PORT}`);
+      console.log(
+        `API: ${
+          NODE_ENVIRONMENT === "development"
+            ? `${WEB_LINK_LOCAL} === development`
+            : NODE_ENVIRONMENT === "production"
+            ? `${WEB_LINK_HOSTING} === production`
+            : `${NODE_ENVIRONMENT} === catch`
+        }`
+      );
+    });
+    console.log("Connected to DB =>");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
