@@ -13,6 +13,7 @@ const {
 } = require("../controllers/googleDriveApi");
 const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 const UserModel = require("../model/userModel");
+const { getUser } = require("../controllers/userController");
 
 router.get("/create-chat-folder", createChatsFolder);
 router.get("/create-user-folder", createUsersFolder);
@@ -68,13 +69,12 @@ router.get("/download-file/:id", async (req, res) => {
 router.post("/upload-resume", upload.single("resume"), async (req, res) => {
   const service = google.drive({ version: "v3", auth });
   const { name, id } = req.body;
+  const user = await UserModel.findById(id);
   const file = req.file;
-  const resume_name = `cvresume_${name}`;
-  console.log("Details: ", name, id, file);
-
+  const resume_name = `cvresume_${user?.fullName}`;
   try {
     // Create or fetch the user's folder
-    const directory = await createUsersFolder(name);
+    const directory = await createUsersFolder(user?.fullName);
 
     // Search for an existing resume file with the same name in the folder
     const searchQuery = `name = '${resume_name}' and '${directory}' in parents and trashed = false`;
@@ -87,7 +87,7 @@ router.post("/upload-resume", upload.single("resume"), async (req, res) => {
     if (existingFiles.data.files.length > 0) {
       for (const existingFile of existingFiles.data.files) {
         await service.files.delete({ fileId: existingFile.id });
-        console.log(`Deleted existing file: ${existingFile.name}`);
+        // console.log(`Deleted existing file: ${existingFile.name}`);
       }
     }
 
@@ -127,12 +127,16 @@ router.post("/upload-resume", upload.single("resume"), async (req, res) => {
       throw new Error("User not found");
     }
 
-    console.log(`Updated user resume details: ${JSON.stringify(updatedUser)}`);
+    // console.log(`Updated user resume details: ${JSON.stringify(updatedUser)}`);
 
     res.status(200).send({
       success: true,
       message: "Resume uploaded and user updated successfully",
-      file: uploadedResume,
+      file: {
+        id: uploadedResume.id,
+        name: uploadedResume.name,
+        mimeType: await getFileExtension(uploadedResume.mimeType),
+      },
     });
   } catch (err) {
     console.error("Error:", err);
