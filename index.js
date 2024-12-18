@@ -53,7 +53,6 @@ const {
   chatRoute,
   googleRoute,
 } = require("./routes/allRoutes");
-
 // Route all API requests
 app.use("/api", userRoute);
 app.use("/api", jobRoute);

@@ -112,15 +112,17 @@ const deleteChat = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-const deleteAllChat = async (request, response) => {
+const deleteAllChat = async (req, res) => {
   try {
+    // Delete all chats
     await ChatModel.deleteMany({});
-    response.status(200).json({ message: "All chats deleted successfully." });
+    res.status(200).json({ message: "All chats deleted successfully." });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error deleting chats:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 module.exports = {
   getChatsByCollaboratorId,
   addChat,

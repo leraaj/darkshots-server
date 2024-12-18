@@ -4,6 +4,8 @@ const { google } = require("googleapis");
 const os = require("os");
 const path = require("path");
 const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
+const UserModel = require("../model/userModel");
+const CollaboratorModel = require("../model/collaboratorModel");
 
 const createFolder = async (folderName, parentId) => {
   const service = google.drive({ version: "v3", auth });
@@ -94,68 +96,131 @@ const deleteAllFilesAndFolders = async () => {
     console.error("Error fetching files:", error);
   }
 };
-const uploadFile = async (request, response) => {
-  const { name, collaborator_id, mimeType, file } = request.params;
+const uploadResume = async (req, res) => {
   const service = google.drive({ version: "v3", auth });
-  const requestBody = {
-    name: `${name}`,
-    // name: `TEST`, //TEST
-    fields: "id",
-    parents: [`1RUrxWoJmcCsu2axjyJgUarRCxOjSemZE`], //TEST
-    // parents: [`${collaborator_id}`], // "collaborator._id"
-  };
-  const media = {
-    mimeType: mimeType, //File mime type
-    // mimeType: "text/plain", //TEST
-    body: fs.createReadStream(file), //File directory
-    // body: fs.createReadStream("test.txt"), //TEST
-  };
+  const { id } = req.body;
+  const user = await UserModel.findById(id);
+  const file = req.file;
+  console.log(file);
+  const resume_name = `cvresume_${user?.fullName}`;
   try {
-    const file = await service.files.create({
+    // Create or fetch the user's folder
+    const directory = await createUsersFolder(user?.fullName);
+
+    // Search for an existing resume file with the same name in the folder
+    const searchQuery = `name = '${resume_name}' and '${directory}' in parents and trashed = false`;
+    const existingFiles = await service.files.list({
+      q: searchQuery,
+      fields: "files(id, name)",
+    });
+
+    // If the file exists, delete it
+    if (existingFiles.data.files.length > 0) {
+      for (const existingFile of existingFiles.data.files) {
+        await service.files.delete({ fileId: existingFile.id });
+        // console.log(`Deleted existing file: ${existingFile.name}`);
+      }
+    }
+
+    // Upload the new resume file
+    const requestBody = {
+      name: resume_name,
+      parents: [directory],
+    };
+    const media = {
+      mimeType: file.mimetype,
+      body: fs.createReadStream(file.path),
+    };
+
+    const uploadedFile = await service.files.create({
       requestBody,
-      media: media,
-    });
-    return console.log(`FILE: ${file.data.id}`);
-  } catch (err) {
-    console.log("Error:", err);
-    throw err;
-  }
-};
-const downloadFile = async (realFileId) => {
-  const service = google.drive({ version: "v3", auth });
-
-  try {
-    // First, get the file metadata to determine its name and MIME type
-    const fileMetadata = await service.files.get({
-      fileId: realFileId,
-      fields: "name, mimeType", // Request only name and MIME type
+      media,
+      fields: "id, name, mimeType",
     });
 
-    const downloadsFolder = path.join(os.homedir(), "Downloads");
-    const fileName = fileMetadata.data.name;
-    const mimeType = fileMetadata.data.mimeType;
-    const fileType = getFileExtension(mimeType);
-    const destPath = path.join(downloadsFolder, `${fileName}.${fileType}`);
-    const downloadedFilePath = fs.createWriteStream(destPath);
+    // Handle your custom logic for updating USERS here
+    const uploadedResume = uploadedFile.data;
 
-    // Now, download the file content
-    const response = await service.files.get(
-      { fileId: realFileId, alt: "media" },
-      { responseType: "stream" }
+    // Update the user's resume details in the database
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id, // User's ID
+      {
+        "files.resume": {
+          id: uploadedResume.id,
+          name: uploadedResume.name,
+          mimeType: await getFileExtension(uploadedResume.mimeType),
+        },
+      },
+      { new: true } // Return the updated user document
     );
 
-    // Pipe the response data into the file stream
-    response.data
-      .on("end", () => {
-        console.log("File downloaded successfully.");
-      })
-      .on("error", (err) => {
-        console.error("Error downloading the file:", err);
-      })
-      .pipe(downloadedFilePath); // Save to the dynamically determined file name
+    if (!updatedUser) {
+      throw new Error("User not found");
+    }
+
+    // console.log(`Updated user resume details: ${JSON.stringify(updatedUser)}`);
+
+    res.status(200).send({
+      success: true,
+      message: "Resume uploaded and user updated successfully",
+      file: {
+        id: uploadedResume.id,
+        name: uploadedResume.name,
+        mimeType: await getFileExtension(uploadedResume.mimeType),
+      },
+    });
   } catch (err) {
     console.error("Error:", err);
-    throw err;
+    res.status(500).send({
+      success: false,
+      message: "An error occurred while uploading the resume",
+      error: err.message,
+    });
+  }
+};
+const downloadFile = async (req, res) => {
+  const { id } = req.params;
+  const service = google.drive({ version: "v3", auth });
+  try {
+    // Fetch file metadata to get name and MIME type
+    const fileMetadata = await service.files.get({
+      fileId: id,
+      fields: "name, mimeType", // Fetch name and MIME type
+    });
+
+    const { name, mimeType } = fileMetadata.data;
+    console.log(`${name}.${await getFileExtension(mimeType)}`);
+    // Fetch the file content as a stream
+    const fileStream = await service.files.get(
+      {
+        fileId: id,
+        alt: "media", // Fetch the file content
+      },
+      { responseType: "stream" } // Specify stream response
+    );
+
+    // Set response headers
+    res.setHeader("Content-Disposition", " attachment");
+    res.setHeader("Content-Type", " attachment");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="file ${name}.${await getFileExtension(mimeType)}"`
+    );
+    res.setHeader("Content-Type", mimeType);
+
+    // Pipe the file stream to the response
+    fileStream.data
+      .on("end", () => console.log(`File ${id} download completed.`))
+      .on("error", (error) => {
+        console.error(`Error streaming file ${id}:`, error.message);
+        res.status(500).send("Error downloading file.");
+      })
+      .pipe(res);
+
+    console.log(`File ${id} download initialized.`);
+  } catch (err) {
+    console.error(`Failed to download file ${id}:`, err.message);
+    res.status(500).send("Failed to process the file.");
   }
 };
 const getFileExtension = (mimeType) => {
@@ -175,15 +240,30 @@ const getFileExtension = (mimeType) => {
 
   return mimeTypes[mimeType] || "bin"; // Default to .bin if MIME type not recognized
 };
+const uploadChatFiles = async (req, res) => {
+  const { userId, collaboratorId } = req.body;
+  const uploadedFiles = req.files; // This contains the uploaded files
+
+  const user = await UserModel.findById(userId);
+  const collaborator = await CollaboratorModel.findById(collaboratorId);
+  try {
+    const directory = await createChatsFolder(collaborator?.title);
+    // console.log(`Directory:\n${directory}\nFiles:\n${req.files}`); // Check the uploaded files
+
+    res.status(200).send(uploadedFiles);
+  } catch (err) {
+    res.status(500).send("Error uploading files");
+  }
+};
 
 module.exports = {
   createFolder,
-  uploadFile,
-  downloadFile,
   deleteAllFilesAndFolders,
   createUsersFolder,
   createChatsFolder,
-  getFileExtension,
+  uploadResume,
+  uploadChatFiles,
+  downloadFile,
 };
 
 // const folder_structure = {

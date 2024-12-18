@@ -58,6 +58,13 @@ const userSchema = new mongoose.Schema(
         name: { type: String },
         mimeType: { type: String },
       },
+      portfolio: [
+        {
+          id: { type: String },
+          name: { type: String },
+          mimeType: { type: String },
+        },
+      ],
       // Add portfolio object that can have 2 or more files
     },
   },
