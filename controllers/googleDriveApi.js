@@ -51,17 +51,14 @@ const createFolder = async (folderName, parentId) => {
     throw error;
   }
 };
-
 // Function to create a folder inside 'users'
 const createUsersFolder = async (folderName) => {
   return await createFolder(folderName, process.env.USERS_ROOT_DIRECTORY);
 };
-
 // Function to create a folder inside 'chats'
 const createChatsFolder = async (folderName) => {
   return await createFolder(folderName, process.env.CHATS_ROOT_DIRECTORY);
 };
-
 const deleteAllFilesAndFolders = async () => {
   const service = google.drive({ version: "v3", auth });
 
@@ -248,7 +245,18 @@ const uploadChatFiles = async (req, res) => {
   const collaborator = await CollaboratorModel.findById(collaboratorId);
   try {
     const directory = await createChatsFolder(collaborator?.title);
-    // console.log(`Directory:\n${directory}\nFiles:\n${req.files}`); // Check the uploaded files
+    console.log(`Directory:\n${directory}\nFiles:\n${req.files}`);
+    // Create or Get a file name duper filing logic for such duped files before proceeding
+    // to step (1)
+
+    // Step (1)
+    // * Iterate uploaded files for duped files
+    // * If file name and file type is the same, add a nth-number to associate that the file name and type
+    //   has already been repeated, but still upload the file
+
+    // Step (2)
+    // if everything is ok, upload the data first on google, and upon
+    // successfull upload then upload the google data inside the chatModel
 
     res.status(200).send(uploadedFiles);
   } catch (err) {
