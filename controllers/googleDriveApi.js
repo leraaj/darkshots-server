@@ -51,11 +51,9 @@ const createFolder = async (folderName, parentId) => {
     throw error;
   }
 };
-// Function to create a folder inside 'users'
 const createUsersFolder = async (folderName) => {
   return await createFolder(folderName, process.env.USERS_ROOT_DIRECTORY);
 };
-// Function to create a folder inside 'chats'
 const createChatsFolder = async (folderName) => {
   return await createFolder(folderName, process.env.CHATS_ROOT_DIRECTORY);
 };
@@ -98,19 +96,16 @@ const uploadResume = async (req, res) => {
   const { id } = req.body;
   const user = await UserModel.findById(id);
   const file = req.file;
-  console.log(file);
   const resume_name = `cvresume_${user?.fullName}`;
   try {
     // Create or fetch the user's folder
     const directory = await createUsersFolder(user?.fullName);
-
     // Search for an existing resume file with the same name in the folder
     const searchQuery = `name = '${resume_name}' and '${directory}' in parents and trashed = false`;
     const existingFiles = await service.files.list({
       q: searchQuery,
       fields: "files(id, name)",
     });
-
     // If the file exists, delete it
     if (existingFiles.data.files.length > 0) {
       for (const existingFile of existingFiles.data.files) {
@@ -118,7 +113,6 @@ const uploadResume = async (req, res) => {
         // console.log(`Deleted existing file: ${existingFile.name}`);
       }
     }
-
     // Upload the new resume file
     const requestBody = {
       name: resume_name,
@@ -128,16 +122,13 @@ const uploadResume = async (req, res) => {
       mimeType: file.mimetype,
       body: fs.createReadStream(file.path),
     };
-
     const uploadedFile = await service.files.create({
       requestBody,
       media,
       fields: "id, name, mimeType",
     });
-
     // Handle your custom logic for updating USERS here
     const uploadedResume = uploadedFile.data;
-
     // Update the user's resume details in the database
     const updatedUser = await UserModel.findByIdAndUpdate(
       id, // User's ID
@@ -154,8 +145,6 @@ const uploadResume = async (req, res) => {
     if (!updatedUser) {
       throw new Error("User not found");
     }
-
-    // console.log(`Updated user resume details: ${JSON.stringify(updatedUser)}`);
 
     res.status(200).send({
       success: true,

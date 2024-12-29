@@ -42,16 +42,37 @@ const initializeSocketServer = (server) => {
     });
 
     socket.on("send_message", (data) => {
-      console.log(`Group: ${data.title}\nMessage: ${data.message}`);
-      socket.to(data?.room).emit("receive_message");
+      // socket.to(data?.room).emit("receive_message"); //comment the previous
+      console.log("============================");
+      console.log(
+        "Sender: " + JSON.stringify(data.messageData.sender.fullName)
+      );
+      console.log("Room: " + JSON.stringify(data.room));
+      console.log(
+        "Message: " + JSON.stringify(data.messageData.message[0].content)
+      );
+      console.log("============================");
+      socket
+        .to(data.room)
+        .emit("receive_message", {
+          message: data.messageData,
+          room: data.roomData,
+        });
       io.emit("refresh_chatlist");
     });
+
     socket.on("new_collaborator", (data) => {
       console.log(data.message);
       io.emit("refresh_chatlist");
     });
     socket.on("error", () => {
       console.log("Socket Error");
+    });
+
+    // V2
+    socket.on("send_message_test", (data) => {
+      console.log(`Group: ${data.title}\nMessage: ${data.message}`);
+      socket.to(data?.room).emit("receive_message");
     });
   });
 };
