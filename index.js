@@ -31,16 +31,25 @@ const API_URL =
     ? WEB_LINK_HOSTING
     : "http://localhost:3001";
 
+const allowedOrigins = [
+  process.env.API_URL,
+  "https://localhost", // Secure localhost (your current app)
+  "http://localhost:8100", // Default Ionic dev server
+  "http://localhost:5173", // Vite dev server (if used)
+  "capacitor://localhost", // Mobile builds
+  "http://192.168.x.x:8100", // Device on same network
+];
 // CORS configuration for the HTTP routes
 app.use(
   cors({
-    origin: [
-      API_URL,
-      "http://localhost:8100", //Web~
-      "http://192.168.137.1", //device
-      "http://192.168.1.2:8101", //WIFI
-      "*",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, etc.)
+      if (allowedOrigins) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
