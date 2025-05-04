@@ -22,6 +22,5 @@ router.get("/download-file/:id", downloadFile);
 // Specifically tailored for updating/adding a resume
 router.post("/upload-resume", upload.single("resume"), uploadResume);
 router.post("/upload-files", upload.array("files"), uploadChatFiles);
-router.get("/checkFile/:id", getFileStatus);
 
 module.exports = router;

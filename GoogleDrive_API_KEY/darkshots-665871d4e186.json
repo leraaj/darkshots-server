@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "darkshots",
+  "private_key_id": "665871d4e1865d8f288c4eb352b00821908f504d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDHiuyHy+TilQtY\nfIQB1sqr/uP71uhvI/bVqETk2Y3sic+/QuBQUsqQFY5p+pbMHH7KQDny735biMsF\n7JDsxpf/JvyCjttv87o8eYihsTTggt67esRLBSuq/Jtmbd54gfx/NF7fMJLVn/BZ\nRr/JjnhtDBvRMFJpkqpUjaJI+TPtOqztTvfvim0cRWrS9fMmOH/zoHbsmRjEio47\nWA8qG284q5eqvu+Z6JmweIDmfzQp/ahIktM1hfKKuRSiIL+pv+1EVZLjJ/CFiMhR\n8MF91btMqHoBPVvGMWTn1f9Xfa54QftQtuthmvt5+w4lB1fdB31I3TnCmfOBt9tp\nwA662rB7AgMBAAECggEABzF0Xl7UxPA/hPSUI6bVDoc1O75fCaafvsr+lMtc6OJ8\n6TWldW/OmowUYrCkX/5E+dB/5kiI4w7W1sNU5BwynYGPx7sToQEFvSlaag3DzLYb\nBmIiElxA2zyY84PRacGx0voV03DiUi4eUXGR91eZ8sBlflCCIAkn971VVNEa9JnB\nESx172ypgdXYdn5caiIPWZ84hNrrC+o7dmLiJhAtcPKngR2UWE8SlmZ+XEu7XAbh\nd7xXdyCVZrzEvZwoXEq8f6FVkW5WLfh1jQNlwpFxuEdZPTOy8Rjv7t3zCVTtbU0o\nZTBYwx/ubj7Q42HMFnTylP6MVzqNsd7mx6jtYU5fRQKBgQDV3/ff/Xy9py0RNmqK\nxuQbZhW93fnYw0obThzEz5/Sf1cHTAQdojfpz3rp6xBbUfkbh4iHMdJ85x5+6o/Q\n2UCDrHl3Nd4ixHWKCwUT/Qhjpxx1hC5tcTUSeH67YTnG9RJs8LsO0H8Rha4hKMBX\n+JpVlAN3P581952iOWjSaR8tXQKBgQDu2EuKmkV/giseP22sQqvXSUR9jzKhRqBA\nlKoHxatl/RlZujsDm8F+eECHIVlSH+NyTTlpYiGaqdDt/UCkNtVBkZfR6MnDwHbS\n116sC0OIHQ90vmfu13bD6KmTQDmHJ+Iqe9w50EMGmKfTOoKL63dIVDvX4ffgjEJa\nuDOUty8ftwKBgQCsKkLLWK7VrIGm3Xseg8SUGbVexhWd3HcHS/X0qH4rYL6Z7SNT\nB4ai/JYhP0xHdtFky9Gnov+h9BqkaAWlRX2dgXW19PMAYc2Mdhp8YLAkKB3Mq78D\n8qGaYM0D4dw0wIs4jwDFiCkB3e6yWq+bIVB7m06+68QqGU4XjMdIub6TMQKBgQC3\nRz7ggvVlnQtdUKrmDtsyfsSR3PqrCzkZlXrMMAEQaCG12tRCNplKZRiPGSYjgNjV\n8zBlD6pdtoXeugGKgZEvmXt41jtNfTkxHZdGSfZuUm5z1VCH1MsMFlNZ7WS3tAE3\nPIiHzKpCO4485p8ao3uLAyhQxtOheb/JQaRDMDZ3DQKBgAJwumbbQwbKprWo1WlI\nUuEDxyNQgTTwFddwsdkNqsPifhVKpIzS1UaCSRUAG+buiKsi7/J9T8+EJZ7H3KxL\nrsb+tIEY8OWgQjG1tu2Xro69WDQ+fdAhDyjvwLTkdS4YnN0kykp18JYxz/yH5waB\nyJZ3ja+1ATkv9RF7OfwDwGGB\n-----END PRIVATE KEY-----\n",
+  "client_email": "darkshot-production@darkshots.iam.gserviceaccount.com",
+  "client_id": "107347971810087654609",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/darkshot-production%40darkshots.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

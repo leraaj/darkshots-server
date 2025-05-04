@@ -17,7 +17,6 @@ const { initializeSocketServer } = require("./socket-server");
 
 // Initialize express app
 const app = express();
-// downloadFile("1q_EIwFkuXGBHVbqjuAZIoRNKscwkVu8-");
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -35,13 +34,21 @@ const API_URL =
 // CORS configuration for the HTTP routes
 app.use(
   cors({
-    origin: [API_URL], // Update with your front-end URL
+    origin: [
+      API_URL,
+      "http://localhost:8100", //Web~
+      "http://192.168.137.1", //device
+      "http://192.168.1.2:8101", //WIFI
+      "*",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   })
 );
+
 // deleteAllFilesAndFolders();
+
 // Import routes
 const {
   userRoute,
@@ -77,7 +84,7 @@ const PORT = process.env.PORT || 3001;
 mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on port: ${PORT}`);
       console.log(
         `API: ${
