@@ -39,12 +39,13 @@ const allowedOrigins = [
   "capacitor://localhost", // Mobile builds
   "http://192.168.x.x:8100", // Device on same network
 ];
-// CORS configuration for the HTTP routes
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, etc.)
-      if (allowedOrigins) {
+      if (!origin) return callback(null, true); // allow mobile/curl
+
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));

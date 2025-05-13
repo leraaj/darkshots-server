@@ -186,7 +186,7 @@ const login = async (request, response) => {
       await UserModel.findByIdAndUpdate(user._id);
       return response
         .cookie("Auth_Token", userToken, {
-          httpOnly: true,
+          httpOnly: false,
           secure: true,
           sameSite: "None",
           maxAge: cookieExpires,
