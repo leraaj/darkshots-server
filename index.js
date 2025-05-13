@@ -32,30 +32,32 @@ const API_URL =
     : "http://localhost:3001";
 
 const allowedOrigins = [
-  process.env.API_URL,
-  "https://localhost", // Secure localhost (your current app)
-  "http://localhost:8100", // Default Ionic dev server
-  "http://localhost:5173", // Vite dev server (if used)
-  "capacitor://localhost", // Mobile builds
-  "http://192.168.x.x:8100", // Device on same network
+  API_URL,
+  "capacitor://localhost",
+  "ionic://localhost",
+  "http://localhost",
+  "http://localhost:8080",
+  "http://localhost:8100",
+  "https://localhost",
+  "http://localhost:5173",
+  "http://192.168.x.x:8100",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow mobile/curl
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Origin not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 
 // deleteAllFilesAndFolders();
 
