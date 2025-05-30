@@ -4,6 +4,10 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const checkForDuplicates = require("../middleware/checkForDuplicates");
 const AppointmentModel = require("../model/appointmentModel");
+const {
+  createFolder,
+  createUsersFolder,
+} = require("../controllers/googleDriveApi");
 require("dotenv").config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -86,6 +90,7 @@ const addUser = async (request, response) => {
   try {
     const addFields = request.body;
     addFields.loggedIn = 0;
+
     const duplicateCheckFields = ["fullName", "email", "contact", "username"];
     const { hasDuplicates, duplicateFields } = await checkForDuplicates({
       Model: UserModel,
@@ -93,16 +98,41 @@ const addUser = async (request, response) => {
       fieldsToCheck: duplicateCheckFields,
     });
 
-    if (hasDuplicates)
+    if (hasDuplicates) {
       return response.status(409).json({
         message: `Duplicate values found for fields: ${duplicateFields.join(
           ", "
         )}`,
         duplicates: duplicateFields,
       });
-
+    }
     const user = new UserModel(addFields);
+    // Create top-level user folder
+    const folderName = user.fullName;
+    const userRootDirectoryId = await createUsersFolder(folderName);
+
+    // Create subfolders
+    const profileDirectoryId = await createFolder(
+      "profile",
+      userRootDirectoryId
+    );
+    const resumeDirectoryId = await createFolder("resume", userRootDirectoryId);
+    const portfolioDirectoryId = await createFolder(
+      "portfolio",
+      userRootDirectoryId
+    );
+
+    // Set required `directories` field before validation
+    user.directories = {
+      root: userRootDirectoryId,
+      profile: profileDirectoryId,
+      resume: resumeDirectoryId,
+      portfolio: portfolioDirectoryId,
+    };
+
+    // ✅ Now it's safe to validate
     await user.validate();
+
     const addedUser = await user.save();
     response.status(200).json(addedUser);
   } catch (error) {
@@ -110,6 +140,7 @@ const addUser = async (request, response) => {
     response.status(500).json({ message: error.message });
   }
 };
+
 const updateUser = async (request, response) => {
   try {
     const { id } = request.params;

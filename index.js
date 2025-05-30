@@ -60,7 +60,6 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
 // deleteAllFilesAndFolders();
-
 // Import routes
 const {
   userRoute,

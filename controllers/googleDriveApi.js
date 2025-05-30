@@ -102,28 +102,28 @@ const uploadResume = async (req, res) => {
   const resume_name = `cvresume_${user?.fullName}`;
 
   try {
-    // Create or fetch the user's folder
-    const directory = await createUsersFolder(user?.fullName);
+    if (!user?.directories?.resume) {
+      throw new Error("User does not have a resume directory assigned.");
+    }
 
-    // Search for an existing resume file with the same name in the folder
-    const searchQuery = `name = '${resume_name}' and '${directory}' in parents and trashed = false`;
+    const resumeDirectory = user.directories.resume;
+
+    // Search for existing resume file in the resume directory
+    const searchQuery = `name = '${resume_name}' and '${resumeDirectory}' in parents and trashed = false`;
     const existingFiles = await service.files.list({
       q: searchQuery,
       fields: "files(id, name)",
     });
 
-    // If the file exists, delete it
-    if (existingFiles.data.files.length > 0) {
-      for (const existingFile of existingFiles.data.files) {
-        await service.files.delete({ fileId: existingFile.id });
-        // console.log(`Deleted existing file: ${existingFile.name}`);
-      }
+    // Delete existing file(s)
+    for (const existingFile of existingFiles.data.files) {
+      await service.files.delete({ fileId: existingFile.id });
     }
 
-    // Upload the new resume file
+    // Upload the new resume file to the correct folder
     const requestBody = {
       name: resume_name,
-      parents: [directory],
+      parents: [resumeDirectory], // ✅ Save directly in resume directory
     };
     const media = {
       mimeType: file.mimetype,
@@ -135,45 +135,35 @@ const uploadResume = async (req, res) => {
       fields: "id, name, mimeType",
     });
 
-    // Handle file category and metadata
+    // Extract metadata
     const uploadedResume = uploadedFile.data;
-    const fileCategory = await getFileType(uploadedResume.mimeType).category; // Use your function to get the category
-    const fileExtension = await getFileType(uploadedResume.mimeType).mimeType; // Get the extension
+    const fileTypeInfo = await getFileType(uploadedResume.mimeType);
 
-    // Update the user's resume details in the database
+    // Update user's resume metadata in the DB
     const updatedUser = await UserModel.findByIdAndUpdate(
-      id, // User's ID
+      id,
       {
-        "files.resume": {
+        resume: {
           id: uploadedResume.id,
           name: uploadedResume.name,
           mimeType: uploadedResume.mimeType,
-          fileType: fileCategory, // Save the category of the file
-          filename: uploadedResume.name, // Save the filename
-          extension: fileExtension, // Store the file extension
+          fileType: fileTypeInfo.category,
+          filename: uploadedResume.name,
+          extension: fileTypeInfo.mimeType,
         },
       },
-      { new: true } // Return the updated user document
+      { new: true }
     );
 
-    if (!updatedUser) {
-      throw new Error("User not found");
-    }
+    if (!updatedUser) throw new Error("User not found");
 
     res.status(200).send({
       success: true,
       message: "Resume uploaded and user updated successfully",
-      file: {
-        id: uploadedResume.id,
-        name: uploadedResume.name,
-        mimeType: uploadedResume.mimeType,
-        fileType: fileCategory, // Return the file type (category)
-        filename: uploadedResume.name, // Return the filename
-        extension: fileExtension, // Return the file extension
-      },
+      file: updatedUser.resume,
     });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error uploading resume:", err);
     res.status(500).send({
       success: false,
       message: "An error occurred while uploading the resume",
@@ -181,7 +171,92 @@ const uploadResume = async (req, res) => {
     });
   }
 };
+const uploadProfile = async (req, res) => {
+  const service = google.drive({ version: "v3", auth });
+  const { id } = req.body;
+  const user = await UserModel.findById(id);
+  const file = req.file;
+  const profile_name = `profile_${user?.fullName}`;
 
+  try {
+    if (!user?.directories?.profile) {
+      throw new Error("User does not have a profile directory assigned.");
+    }
+
+    const profileDirectory = user.directories.profile;
+
+    // Search for existing profile file in the profile directory
+    const searchQuery = `name = '${profile_name}' and '${profileDirectory}' in parents and trashed = false`;
+    const existingFiles = await service.files.list({
+      q: searchQuery,
+      fields: "files(id, name)",
+    });
+
+    // Delete existing file(s)
+    for (const existingFile of existingFiles.data.files) {
+      await service.files.delete({ fileId: existingFile.id });
+    }
+
+    // Upload the new profile file to the correct folder
+    const requestBody = {
+      name: profile_name,
+      parents: [profileDirectory],
+    };
+    const media = {
+      mimeType: file.mimetype,
+      body: fs.createReadStream(file.path),
+    };
+    const uploadedFile = await service.files.create({
+      requestBody,
+      media,
+      fields: "id, name, mimeType",
+    });
+
+    // ✅ Set permission to make the file publicly accessible
+    await service.permissions.create({
+      fileId: uploadedFile.data.id,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+
+    // Extract metadata
+    const uploadedProfile = uploadedFile.data;
+    const fileTypeInfo = await getFileType(uploadedProfile.mimeType);
+
+    // Update user's profile metadata in the DB
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        profile: {
+          id: uploadedProfile.id,
+          name: uploadedProfile.name,
+          mimeType: uploadedProfile.mimeType,
+          fileType: fileTypeInfo.category,
+          filename: uploadedProfile.name,
+          extension: fileTypeInfo.mimeType,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) throw new Error("User not found");
+
+    res.status(200).send({
+      success: true,
+      message: "Profile uploaded and user updated successfully",
+      file: updatedUser.profile,
+    });
+  } catch (err) {
+    console.error("Error uploading profile:", err);
+    res.status(500).send({
+      success: false,
+      message: "An error occurred while uploading the profile",
+      error: err.message,
+    });
+  }
+};
 const downloadFile = async (req, res) => {
   const { id } = req.params;
   const service = google.drive({ version: "v3", auth });
@@ -425,6 +500,7 @@ module.exports = {
   createUsersFolder,
   createChatsFolder,
   uploadResume,
+  uploadProfile,
   uploadChatFiles,
   downloadFile,
 };

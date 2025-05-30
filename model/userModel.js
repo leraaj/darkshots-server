@@ -1,6 +1,27 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+const googleFileSchema = new mongoose.Schema(
+  {
+    id: { type: String },
+    name: { type: String },
+    mimeType: { type: String },
+    fileType: { type: String }, // Category/type of file (e.g., 'image', 'document')
+    filename: { type: String }, // Actual file name
+    extension: { type: String }, // File extension (e.g., 'pdf', 'jpg')
+  },
+  { _id: false }
+);
+// Fixed directories structure
+const directoriesSchema = new mongoose.Schema(
+  {
+    root: { type: String, required: true },
+    profile: { type: String, required: true },
+    resume: { type: String, required: true },
+    portfolio: { type: String, required: true },
+  },
+  { _id: false }
+);
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -30,9 +51,7 @@ const userSchema = new mongoose.Schema(
     position: {
       type: Number,
       required: [true, "Please select position"],
-      // 1 = admin
-      // 2 = client
-      // 3 = applicant
+      // 1 = admin, 2 = client, 3 = applicant
     },
     skills: [
       {
@@ -43,35 +62,20 @@ const userSchema = new mongoose.Schema(
     applicationStatus: {
       type: Number,
       required: [true, "Please select status"],
-      // { value: 2, label: "Pending" },
-      // { value: 3, label: "Accepted" },
-      // { value: 4, label: "Rejected" },
+      // 2 = Pending, 3 = Accepted, 4 = Rejected
     },
-    files: {
-      profile: {
-        id: { type: String },
-        name: { type: String },
-        mimeType: { type: String },
-      },
-      resume: {
-        id: { type: String },
-        name: { type: String },
-        mimeType: { type: String },
-        fileType: { type: String }, // Added to categorize the file type
-        filename: { type: String }, // Added filename for the resume file
-        extension: { type: String }, // Added file extension
-      },
-      portfolio: [
-        {
-          id: { type: String },
-          name: { type: String },
-          mimeType: { type: String },
-          fileType: { type: String }, // Added to categorize the file type
-          filename: { type: String }, // Added filename for portfolio files
-          extension: { type: String }, // Added file extension
-        },
-      ],
-      // Portfolio can contain multiple files with similar metadata
+    profile: {
+      type: googleFileSchema,
+    },
+    resume: {
+      type: googleFileSchema,
+    },
+    portfolio: [googleFileSchema],
+
+    // ✅ New directories field
+    directories: {
+      type: directoriesSchema,
+      required: true,
     },
   },
   {

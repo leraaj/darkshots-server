@@ -8,6 +8,7 @@ const {
   createChatsFolder,
   createUsersFolder,
   uploadResume,
+  uploadProfile,
   downloadFile,
   uploadChatFiles,
   getFileStatus,
@@ -21,6 +22,7 @@ router.get("/download-file/:id", downloadFile);
 // For uploading resume
 // Specifically tailored for updating/adding a resume
 router.post("/upload-resume", upload.single("resume"), uploadResume);
+router.post("/upload-profile", upload.single("profile"), uploadProfile);
 router.post("/upload-files", upload.array("files"), uploadChatFiles);
 
 module.exports = router;
