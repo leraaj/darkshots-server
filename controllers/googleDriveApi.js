@@ -109,15 +109,14 @@ const uploadResume = async (req, res) => {
     const resumeDirectory = user.directories.resume;
 
     // Search for existing resume file in the resume directory
-    const searchQuery = `name = '${resume_name}' and '${resumeDirectory}' in parents and trashed = false`;
-    const existingFiles = await service.files.list({
-      q: searchQuery,
-      fields: "files(id, name)",
-    });
+    const fileId = user?.resume?.id;
 
-    // Delete existing file(s)
-    for (const existingFile of existingFiles.data.files) {
-      await service.files.delete({ fileId: existingFile.id });
+    if (fileId) {
+      try {
+        await service.files.delete({ fileId });
+      } catch (err) {
+        console.warn("File might not exist or already deleted:", err.message);
+      }
     }
 
     // Upload the new resume file to the correct folder
@@ -134,7 +133,13 @@ const uploadResume = async (req, res) => {
       media,
       fields: "id, name, mimeType",
     });
-
+    await service.permissions.create({
+      fileId: uploadedFile.data.id,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
     // Extract metadata
     const uploadedResume = uploadedFile.data;
     const fileTypeInfo = await getFileType(uploadedResume.mimeType);
@@ -186,15 +191,20 @@ const uploadProfile = async (req, res) => {
     const profileDirectory = user.directories.profile;
 
     // Search for existing profile file in the profile directory
-    const searchQuery = `name = '${profile_name}' and '${profileDirectory}' in parents and trashed = false`;
-    const existingFiles = await service.files.list({
-      q: searchQuery,
-      fields: "files(id, name)",
-    });
+    // const searchQuery = `name = '${profile_name}' and '${profileDirectory}' in parents and trashed = false`;
+    // const existingFiles = await service.files.list({
+    //   q: searchQuery,
+    //   fields: "files(id, name)",
+    // });
 
-    // Delete existing file(s)
-    for (const existingFile of existingFiles.data.files) {
-      await service.files.delete({ fileId: existingFile.id });
+    const fileId = user?.profile?.id;
+
+    if (fileId) {
+      try {
+        await service.files.delete({ fileId });
+      } catch (err) {
+        console.warn("File might not exist or already deleted:", err.message);
+      }
     }
 
     // Upload the new profile file to the correct folder
