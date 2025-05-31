@@ -7,6 +7,7 @@ const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 const UserModel = require("../model/userModel");
 const CollaboratorModel = require("../model/collaboratorModel");
 const ChatModel = require("../model/chatModel");
+const sharp = require("sharp");
 
 const createFolder = async (folderName, parentId) => {
   const service = google.drive({ version: "v3", auth });
@@ -190,13 +191,6 @@ const uploadProfile = async (req, res) => {
 
     const profileDirectory = user.directories.profile;
 
-    // Search for existing profile file in the profile directory
-    // const searchQuery = `name = '${profile_name}' and '${profileDirectory}' in parents and trashed = false`;
-    // const existingFiles = await service.files.list({
-    //   q: searchQuery,
-    //   fields: "files(id, name)",
-    // });
-
     const fileId = user?.profile?.id;
 
     if (fileId) {
@@ -207,15 +201,23 @@ const uploadProfile = async (req, res) => {
       }
     }
 
-    // Upload the new profile file to the correct folder
+    // ✅ Crop and resize the image to 300x300 using sharp
+    const tempCroppedPath = path.join(
+      __dirname,
+      `cropped_${file.filename || "profile"}.jpg`
+    );
+    await sharp(file.path).resize(300, 300).toFile(tempCroppedPath);
+
     const requestBody = {
       name: profile_name,
       parents: [profileDirectory],
     };
+
     const media = {
-      mimeType: file.mimetype,
-      body: fs.createReadStream(file.path),
+      mimeType: "image/jpeg",
+      body: fs.createReadStream(tempCroppedPath),
     };
+
     const uploadedFile = await service.files.create({
       requestBody,
       media,
@@ -229,6 +231,11 @@ const uploadProfile = async (req, res) => {
         role: "reader",
         type: "anyone",
       },
+    });
+
+    // ✅ Clean up the cropped file
+    fs.unlink(tempCroppedPath, (err) => {
+      if (err) console.warn("Error deleting temp cropped image:", err);
     });
 
     // Extract metadata
@@ -267,6 +274,7 @@ const uploadProfile = async (req, res) => {
     });
   }
 };
+
 const downloadFile = async (req, res) => {
   const { id } = req.params;
   const service = google.drive({ version: "v3", auth });
