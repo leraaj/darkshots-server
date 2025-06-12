@@ -39,6 +39,9 @@ const jobSchema = new mongoose.Schema(
           required: true,
         },
       },
+      disabledUntil: {
+        type: Date,
+      },
     },
   },
   {
