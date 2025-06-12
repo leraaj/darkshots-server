@@ -11,7 +11,7 @@ const {
   uploadProfile,
   downloadFile,
   uploadChatFiles,
-  getFileStatus,
+  uploadPortfolio,
 } = require("../controllers/googleDriveApi");
 const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 
@@ -24,5 +24,6 @@ router.get("/download-file/:id", downloadFile);
 router.post("/upload-resume", upload.single("resume"), uploadResume);
 router.post("/upload-profile", upload.single("profile"), uploadProfile);
 router.post("/upload-files", upload.array("files"), uploadChatFiles);
+router.post("/upload-portfolio", upload.array("portfolio"), uploadPortfolio);
 
 module.exports = router;

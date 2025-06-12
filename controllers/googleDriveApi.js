@@ -274,6 +274,121 @@ const uploadProfile = async (req, res) => {
     });
   }
 };
+const uploadPortfolio = async (req, res) => {
+  const service = google.drive({ version: "v3", auth });
+  const { id } = req.body;
+  const files = req.files; // multiple files array
+
+  if (!files || files.length === 0) {
+    return res.status(400).send({
+      success: false,
+      message: "No portfolio files provided.",
+    });
+  }
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) throw new Error("User not found");
+
+    if (!user.directories?.portfolio) {
+      throw new Error("User does not have a portfolio directory assigned.");
+    }
+
+    const portfolioDirectory = user.directories.portfolio;
+
+    // Step 1: Get existing portfolio file names to avoid duplicates
+    const existingFiles = await service.files.list({
+      q: `'${portfolioDirectory}' in parents and trashed = false`,
+      fields: "files(id, name)",
+    });
+
+    const existingFileNames = existingFiles.data.files.map((file) => file.name);
+
+    // Prepare an array to collect new portfolio file metadata
+    const uploadedPortfolioFiles = [];
+
+    for (const file of files) {
+      // Ensure unique filename
+      let uniqueName = file.originalname;
+      let fileCount = 1;
+
+      while (existingFileNames.includes(uniqueName)) {
+        const nameParts = file.originalname.split(".");
+        const extension = nameParts.pop();
+        const baseName = nameParts.join(".");
+        uniqueName = `${baseName} (${fileCount}).${extension}`;
+        fileCount++;
+      }
+      existingFileNames.push(uniqueName);
+
+      // Upload each file to Google Drive in the portfolio directory
+      const requestBody = {
+        name: uniqueName,
+        parents: [portfolioDirectory],
+      };
+      const media = {
+        mimeType: file.mimetype,
+        body: fs.createReadStream(file.path),
+      };
+
+      const uploadedFile = await service.files.create({
+        requestBody,
+        media,
+        fields: "id, name, mimeType",
+      });
+
+      // Make file publicly readable
+      await service.permissions.create({
+        fileId: uploadedFile.data.id,
+        requestBody: {
+          role: "reader",
+          type: "anyone",
+        },
+      });
+
+      // Get category and extension info
+      const fileTypeInfo = await getFileType(uploadedFile.data.mimeType);
+      const fileExtension = getFileExtension(uploadedFile.data.mimeType);
+
+      // Push metadata to array
+      uploadedPortfolioFiles.push({
+        id: uploadedFile.data.id,
+        name: uploadedFile.data.name,
+        mimeType: uploadedFile.data.mimeType,
+        fileType: fileTypeInfo.category,
+        filename: uploadedFile.data.name,
+        extension: fileExtension,
+      });
+
+      // Cleanup local file after upload (optional but recommended)
+      fs.unlink(file.path, (err) => {
+        if (err) console.warn("Error deleting temp file:", err);
+      });
+    }
+
+    // Step 3: Append new files metadata to user's portfolio array in DB
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      { $push: { portfolio: { $each: uploadedPortfolioFiles } } },
+      { new: true }
+    );
+
+    if (!updatedUser) throw new Error("User not found after update");
+
+    res.status(200).send({
+      success: true,
+      message: "Portfolio files uploaded successfully",
+      files: uploadedPortfolioFiles,
+    });
+  } catch (error) {
+    console.error("Error uploading portfolio files:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to upload portfolio files",
+      error: error.message,
+    });
+  }
+};
 
 const downloadFile = async (req, res) => {
   const { id } = req.params;
@@ -519,21 +634,7 @@ module.exports = {
   createChatsFolder,
   uploadResume,
   uploadProfile,
+  uploadPortfolio,
   uploadChatFiles,
   downloadFile,
 };
-
-// const folder_structure = {
-//   users: {
-//     names: {
-//       files: [], //resume/CV/portfolio
-//       profile_photo: "", //Profile Picture
-//
-//     },
-//   },
-//   groupFolders: {
-//     group_names: {
-//       files: [], //All kinds of files uploaded within group
-//     },
-//   },
-// };

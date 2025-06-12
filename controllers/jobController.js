@@ -1,15 +1,81 @@
 const JobModel = require("../model/jobModel");
 
-const getJobs = async (request, response) => {
+const getJobs = async (req, res) => {
   try {
-    const joblists = await JobModel.find({}).populate({
-      path: "category",
-      select: "title", // This assumes your Category schema has a 'title' field
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ message: "Missing userId in query params" });
+    }
+
+    const jobs = await JobModel.find({})
+      .populate({
+        path: "category",
+        select: "title",
+      })
+      .lean(); // Use .lean() so we can mutate job objects directly
+
+    // Fetch user applications
+    const userApplications = await ApplicantModel.find({
+      user: userId,
+      applicationStatus: { $gte: 1 },
+    }).select("job createdAt");
+
+    // Fetch user appointments
+    const userAppointments = await AppointmentModel.find({
+      user: userId,
+      appointmentStatus: { $gte: 1 },
+    }).select("job createdAt");
+
+    // Organize by job ID for quick lookup
+    const jobDisableDates = new Map();
+
+    // Check applications
+    for (const app of userApplications) {
+      const jobId = app.job.toString();
+      const existing = jobDisableDates.get(jobId);
+      if (!existing || app.createdAt > existing) {
+        jobDisableDates.set(jobId, app.createdAt);
+      }
+    }
+
+    // Check appointments
+    for (const appt of userAppointments) {
+      const jobId = appt.job.toString();
+      const existing = jobDisableDates.get(jobId);
+      if (!existing || appt.createdAt > existing) {
+        jobDisableDates.set(jobId, appt.createdAt);
+      }
+    }
+
+    const jobsWithDisableDates = jobs.map((job) => {
+      const jobId = job._id.toString();
+      const baseDate = jobDisableDates.get(jobId);
+
+      if (baseDate) {
+        const disabledUntil = new Date(baseDate);
+        disabledUntil.setDate(disabledUntil.getDate() + 30);
+
+        const now = new Date();
+
+        if (disabledUntil > now) {
+          return {
+            ...job,
+            disabledUntil,
+          };
+        }
+      }
+
+      // No disable condition met or 30-day window has passed
+      return job;
     });
-    response.status(200).json(joblists);
+
+    res.status(200).json(jobsWithDisableDates);
   } catch (error) {
-    console.log(error.message);
-    response.status(500).json({ message: error.message });
+    console.error("getJobs error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
