@@ -1,3 +1,5 @@
+const ApplicantModel = require("../model/applicationModel");
+const AppointmentModel = require("../model/appointmentModel");
 const JobModel = require("../model/jobModel");
 
 const getJobs = async (req, res) => {
