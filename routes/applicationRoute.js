@@ -17,7 +17,9 @@ router.get("/applications", getApplications);
 router.get("/application/:id", getApplication);
 router.get("/view-applications/:id", getApplicationByUser);
 router.post("/application", addApplication);
-router.post("/notifications/:id", getNotification);
+// router.post("/notifications/:id", getNotification);
+router.get("/notifications/:id", getNotification);
+
 router.delete("/application/:id", deleteApplication);
 router.put("/application/:id", updateApplication);
 router.delete("/applications", deleteAllApplications);
