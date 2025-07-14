@@ -66,40 +66,38 @@ const getApplicationByUser = async (request, response) => {
   }
 };
 
-const getNotification = async (req, res) => {
+const getNotification = async (request, response) => {
   try {
-    const { id } = req.params;
-    const appointments = await AppointmentModel.find({ user: id })
-      .populate("user", "fullName position email")
-      .populate("job", "title details")
-      .select(
-        "job user meetingLink meetingTime appointmentStatus phase complete createdAt"
-      );
+    const userId = request.params.id; // or request.query.id depending on your route
 
-    const applications = await ApplicationModel.find({ user: id })
-      .populate("user", "fullName position email")
+    // Get user-specific applications
+    const applications = await ApplicationModel.find({ user: userId })
+      .populate("user", "fullName email contact")
       .populate("job", "title details")
       .select(
         "job user applicationStatus phase complete createdAt updatedAt disabled"
       );
 
-    const notifications = [
-      ...appointments.map((appointment) => ({ ...appointment._doc })),
-      ...applications.map((application) => ({ ...application._doc })),
-    ];
+    // Get user-specific appointments
+    const appointments = await AppointmentModel.find({ user: userId })
+      .populate("user", "fullName _id")
+      .populate("job", "title _id")
+      .select(
+        "job user phase appointmentStatus complete meetingLink meetingTime initialRemarks finalRemarks hiringRemarks createdAt updatedAt"
+      );
 
-    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    if (notifications.length === 0) {
-      return res
+    // Optional: if you want to check if both are empty
+    if (!applications.length && !appointments.length) {
+      return response
         .status(404)
-        .json({ message: "No notifications found for this user." });
+        .json({ message: "No notifications found for this user" });
     }
 
-    res.status(200).json(notifications);
+    // Return both in one response
+    response.status(200).json({ applications, appointments });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    console.error(error.message);
+    response.status(500).json({ message: "Internal Server Error" });
   }
 };
 
