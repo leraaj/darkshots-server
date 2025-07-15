@@ -68,32 +68,30 @@ const getApplicationByUser = async (request, response) => {
 
 const getNotification = async (request, response) => {
   try {
-    const userId = request.params.id; // or request.query.id depending on your route
+    const userId = request.params.id;
 
     // Get user-specific applications
     const applications = await ApplicationModel.find({ user: userId })
       .populate("user", "fullName email contact")
       .populate("job", "title details")
       .select(
-        "job user applicationStatus phase complete createdAt updatedAt disabled"
-      );
+        "_id job user applicationStatus phase complete createdAt updatedAt disabled"
+      ); // <-- explicitly include _id
 
     // Get user-specific appointments
     const appointments = await AppointmentModel.find({ user: userId })
       .populate("user", "fullName _id")
       .populate("job", "title _id")
       .select(
-        "job user phase appointmentStatus complete meetingLink meetingTime initialRemarks finalRemarks hiringRemarks createdAt updatedAt"
-      );
+        "_id job user phase appointmentStatus complete meetingLink meetingTime initialRemarks finalRemarks hiringRemarks createdAt updatedAt"
+      ); // <-- explicitly include _id
 
-    // Optional: if you want to check if both are empty
     if (!applications.length && !appointments.length) {
       return response
         .status(404)
         .json({ message: "No notifications found for this user" });
     }
 
-    // Return both in one response
     response.status(200).json({ applications, appointments });
   } catch (error) {
     console.error(error.message);
