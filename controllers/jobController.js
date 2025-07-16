@@ -12,74 +12,88 @@ const getJobsMobile = async (req, res) => {
         .json({ message: "Missing userId in query params" });
     }
 
+    // ✅ Get all jobs
     const jobs = await JobModel.find({})
-      .populate({
-        path: "category",
-        select: "title",
-      })
-      .lean(); // Use .lean() so we can mutate job objects directly
+      .populate({ path: "category", select: "title" })
+      .lean();
 
-    // Fetch user applications
+    // ✅ Fetch applications and appointments with statuses -1 and 1
     const userApplications = await ApplicantModel.find({
       user: userId,
-      applicationStatus: { $gte: -1 },
-    }).select("job createdAt");
+      applicationStatus: { $in: [-1, 1] },
+    }).select("job createdAt applicationStatus");
 
-    // Fetch user appointments
     const userAppointments = await AppointmentModel.find({
       user: userId,
-      appointmentStatus: { $gte: -1 },
-    }).select("job createdAt");
+      appointmentStatus: { $in: [-1, 1] },
+    }).select("job createdAt appointmentStatus");
 
-    // Organize by job ID for quick lookup
-    const jobDisableDates = new Map();
+    // ✅ Map jobs to all related status records
+    const jobStatusMap = new Map();
 
-    // Check applications
+    // 🌀 Group applications
     for (const app of userApplications) {
-      const jobId = app.job.toString();
-      const existing = jobDisableDates.get(jobId);
-      if (!existing || app.createdAt > existing) {
-        jobDisableDates.set(jobId, app.createdAt);
+      const jobId = app.job?.toString();
+      if (!jobId) continue;
+      if (!jobStatusMap.has(jobId)) {
+        jobStatusMap.set(jobId, []);
       }
+      jobStatusMap.get(jobId).push({
+        status: app.applicationStatus,
+        date: app.createdAt,
+      });
     }
 
-    // Check appointments
+    // 🌀 Group appointments
     for (const appt of userAppointments) {
-      const jobId = appt.job.toString();
-      const existing = jobDisableDates.get(jobId);
-      if (!existing || appt.createdAt > existing) {
-        jobDisableDates.set(jobId, appt.createdAt);
+      const jobId = appt.job?.toString();
+      if (!jobId) continue;
+      if (!jobStatusMap.has(jobId)) {
+        jobStatusMap.set(jobId, []);
       }
+      jobStatusMap.get(jobId).push({
+        status: appt.appointmentStatus,
+        date: appt.createdAt,
+      });
     }
 
+    // ✅ Apply disable condition: if both -1 and 1 exist for a job
     const jobsWithDisableDates = jobs.map((job) => {
       const jobId = job._id.toString();
-      const baseDate = jobDisableDates.get(jobId);
+      const records = jobStatusMap.get(jobId);
 
-      if (baseDate) {
-        const disabledUntil = new Date(baseDate);
-        disabledUntil.setDate(disabledUntil.getDate() + 30);
+      if (records) {
+        const hasPositive = records.some((r) => r.status === 1);
+        const hasNegative = records.some((r) => r.status === -1);
 
-        const now = new Date();
+        if (hasPositive && hasNegative) {
+          // Get the most recent date among both types
+          const latestDate = records
+            .filter((r) => r.status === 1 || r.status === -1)
+            .reduce((max, r) => (r.date > max ? r.date : max), new Date(0));
 
-        if (disabledUntil > now) {
-          return {
-            ...job,
-            disabledUntil,
-          };
+          const disabledUntil = new Date(latestDate);
+          disabledUntil.setDate(disabledUntil.getDate() + 30);
+
+          if (disabledUntil > new Date()) {
+            return {
+              ...job,
+              disabledUntil,
+            };
+          }
         }
       }
 
-      // No disable condition met or 30-day window has passed
       return job;
     });
 
-    res.status(200).json(jobsWithDisableDates);
+    return res.status(200).json(jobsWithDisableDates);
   } catch (error) {
     console.error("getJobsMobile error:", error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+
 const getJobs = async (req, res) => {
   try {
     const jobs = await JobModel.find({})
