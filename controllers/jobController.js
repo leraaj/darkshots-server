@@ -22,13 +22,13 @@ const getJobsMobile = async (req, res) => {
     // Fetch user applications
     const userApplications = await ApplicantModel.find({
       user: userId,
-      applicationStatus: { $gte: 1 },
+      applicationStatus: { $gte: -1 },
     }).select("job createdAt");
 
     // Fetch user appointments
     const userAppointments = await AppointmentModel.find({
       user: userId,
-      appointmentStatus: { $gte: 1 },
+      appointmentStatus: { $gte: -1 },
     }).select("job createdAt");
 
     // Organize by job ID for quick lookup
