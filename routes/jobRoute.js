@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 const {
   getJobs,
+  getJobsMobile,
   getJob,
   addJob,
   updateJob,
   deleteJob,
 } = require("../controllers/jobController");
 
+router.get("/jobs-mobile", getJobsMobile);
 router.get("/jobs", getJobs);
 router.post("/job", addJob);
 router.delete("/job/:id", deleteJob);

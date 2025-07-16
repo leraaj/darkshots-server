@@ -2,7 +2,7 @@ const ApplicantModel = require("../model/applicationModel");
 const AppointmentModel = require("../model/appointmentModel");
 const JobModel = require("../model/jobModel");
 
-const getJobs = async (req, res) => {
+const getJobsMobile = async (req, res) => {
   try {
     const { userId } = req.query;
 
@@ -75,6 +75,21 @@ const getJobs = async (req, res) => {
     });
 
     res.status(200).json(jobsWithDisableDates);
+  } catch (error) {
+    console.error("getJobsMobile error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+const getJobs = async (req, res) => {
+  try {
+    const jobs = await JobModel.find({})
+      .populate({
+        path: "category",
+        select: "title",
+      })
+      .lean(); // Converts Mongoose documents to plain JS objects
+
+    res.status(200).json(jobs);
   } catch (error) {
     console.error("getJobs error:", error);
     res.status(500).json({ message: error.message });
@@ -149,6 +164,7 @@ const deleteJob = async (request, response) => {
 };
 
 module.exports = {
+  getJobsMobile,
   getJobs,
   getJob,
   addJob,
