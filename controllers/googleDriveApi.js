@@ -101,7 +101,7 @@ const uploadResume = async (req, res) => {
   const user = await UserModel.findById(id);
   const file = req.file;
   const resume_name = `cvresume_${user?.fullName}`;
-
+  console.log(JSON.stringify(req.file));
   try {
     if (!user?.directories?.resume) {
       throw new Error("User does not have a resume directory assigned.");
