@@ -390,6 +390,65 @@ const uploadPortfolio = async (req, res) => {
     });
   }
 };
+const deletePortfolioFiles = async (req, res) => {
+  const service = google.drive({ version: "v3", auth });
+  const { userId, fileIds } = req.body;
+
+  if (!userId || !fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+    return res.status(400).send({
+      success: false,
+      message: "userId and fileIds[] are required.",
+    });
+  }
+
+  try {
+    // Step 1: Verify user
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Step 2: Attempt to delete each file from Google Drive
+    for (const fileId of fileIds) {
+      try {
+        await service.files.delete({ fileId });
+      } catch (err) {
+        console.warn(`Failed to delete file ${fileId} on Drive:`, err.message);
+        // Optional: Continue or break depending on how strict you want to be
+      }
+    }
+
+    // Step 3: Remove from MongoDB (portfolio array)
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $pull: {
+          portfolio: {
+            id: { $in: fileIds },
+          },
+        },
+      },
+      { new: true }
+    );
+
+    return res.status(200).send({
+      success: true,
+      message: "Selected portfolio files deleted successfully",
+      deletedFiles: fileIds,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error deleting portfolio files:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Failed to delete portfolio files",
+      error: error.message,
+    });
+  }
+};
 
 const downloadFile = async (req, res) => {
   const { id } = req.params;
@@ -636,6 +695,7 @@ module.exports = {
   uploadResume,
   uploadProfile,
   uploadPortfolio,
+  deletePortfolioFiles,
   uploadChatFiles,
   downloadFile,
 };

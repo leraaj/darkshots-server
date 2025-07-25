@@ -12,6 +12,7 @@ const {
   downloadFile,
   uploadChatFiles,
   uploadPortfolio,
+  deletePortfolioFiles,
 } = require("../controllers/googleDriveApi");
 const { auth } = require("../GoogleDrive_API_KEY/googleAuth");
 
@@ -25,5 +26,5 @@ router.post("/upload-resume", upload.single("resume"), uploadResume);
 router.post("/upload-profile", upload.single("profile"), uploadProfile);
 router.post("/upload-files", upload.array("files"), uploadChatFiles);
 router.post("/upload-portfolio", upload.array("portfolio"), uploadPortfolio);
-
+router.post("/delete-portfolio", deletePortfolioFiles);
 module.exports = router;
