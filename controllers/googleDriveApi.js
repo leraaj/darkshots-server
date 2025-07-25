@@ -393,7 +393,7 @@ const uploadPortfolio = async (req, res) => {
 const deletePortfolioFiles = async (req, res) => {
   const service = google.drive({ version: "v3", auth });
   const { userId, fileIds } = req.body;
-
+  console.log(JSON.stringify(req.body));
   if (!userId || !fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
     return res.status(400).send({
       success: false,
