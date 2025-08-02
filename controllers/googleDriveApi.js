@@ -45,7 +45,7 @@ const createFolder = async (folderName, parentId) => {
       requestBody: {
         role: "reader",
         type: "anyone",
-        emailAddress: process.env.COMPANY_EMAIL,
+        // emailAddress: process.env.COMPANY_EMAIL,
       },
     });
 
@@ -410,7 +410,6 @@ const deletePortfolioFiles = async (req, res) => {
         message: "User not found",
       });
     }
-
     // Step 2: Attempt to delete each file from Google Drive
     for (const fileId of fileIds) {
       try {
