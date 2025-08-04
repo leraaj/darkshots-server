@@ -70,7 +70,7 @@ const getAppointmentByUser = async (request, response) => {
 
     if (!appointments || appointments.length === 0) {
       return response
-        .status(404)
+        .status(200)
         .json({ message: "No applications found for this user" });
     }
 
