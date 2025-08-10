@@ -126,6 +126,20 @@ const initializeSocketServer = (server) => {
       console.log(`Group: ${data.title}\nMessage: ${data.message}`);
       socket.to(data?.room).emit("receive_message");
     });
+
+    // MOBILE FEATURES
+    // Update Notifications - Goal: Refresh notification under these reasons
+    // 1. When applicant applied and respond for a job requests or meetings
+    // 2. When admin/client interact with applicants applications/appointments
+    // 3. Refresh Web page Applicant module when Applicant responds to meetings and send job applications
+
+    // Mobile sends data
+    socket.on("applicant-data", (data) => {
+      console.log("Data from mobile:", data);
+
+      // Forward to all web clients
+      io.emit("new-applicant-data", data);
+    });
   });
 };
 
