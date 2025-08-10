@@ -14,10 +14,22 @@ const initializeSocketServer = (server) => {
       : NODE_ENVIRONMENT === "production"
       ? WEB_LINK_HOSTING
       : "http://localhost:3001";
-
+  const allowedOrigins = [
+    API_URL,
+    "capacitor://localhost",
+    "ionic://localhost",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://localhost:8100",
+    "https://localhost",
+    "http://localhost:5173",
+    "https://localhost:8100",
+    "http://192.168.1.5",
+  ];
   const io = new Server(server, {
     cors: {
-      origin: [API_URL, "http://localhost:8100/"], // Update with your frontend origin
+      origin: [allowedOrigins],
       credentials: true,
     },
     reconnection: true, // Enable reconnection
