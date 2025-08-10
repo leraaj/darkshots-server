@@ -17,7 +17,7 @@ const initializeSocketServer = (server) => {
 
   const io = new Server(server, {
     cors: {
-      origin: [API_URL], // Update with your frontend origin
+      origin: [API_URL, "http://localhost:8100/"], // Update with your frontend origin
       credentials: true,
     },
     reconnection: true, // Enable reconnection
